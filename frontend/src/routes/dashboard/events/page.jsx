@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Plus } from "lucide-react";
+import { Menu } from "lucide-react";
 
 import { columns } from "@/components/events-table/cols";
 import { DataTable } from "@/components/events-table/data-table";
+import { NewEventModel } from "@/components/events/new-event-model";
 import { Sidebar } from "@/components/sidebar";
 
 function getDummyData() {
@@ -25,7 +26,7 @@ export function EventsPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between px-2 lg:px-4">
+      <header className="flex items-center justify-between px-2 lg:justify-end lg:px-4">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="lg:hidden">
@@ -36,10 +37,7 @@ export function EventsPage() {
             <Sidebar />
           </SheetContent>
         </Sheet>
-        <Button className="ml-auto">
-          <Plus className="mr-2 size-4" />
-          Create New Event
-        </Button>
+        <NewEventModel />
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Events</h2>
