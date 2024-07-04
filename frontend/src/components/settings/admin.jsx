@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "./tables/data-table";
 import { eventTypesColumns } from "./tables/event-types-col";
 import { rolesColumns } from "./tables/roles-col";
-import { RolesToolbar } from "./tables/roles-toolbar";
+import { UserManagementToolbar } from "./tables/user-management-toolbar";
 
 import { Button } from "../ui/button";
 import { groupColumns } from "./tables/groups-col";
@@ -40,13 +40,13 @@ export function AdminSettings() {
 
   return (
     <section className="mt-8 w-full rounded-md bg-white p-8 shadow-sm">
-      <Tabs defaultValue="roles" className="mt-6">
+      <Tabs defaultValue="user-management" className="mt-6">
         <TabsList className="bg-inherit">
           <TabsTrigger
-            value="roles"
+            value="user-management"
             className="px-4 data-[state=active]:border-2  data-[state=active]:border-primary data-[state=active]:bg-inherit data-[state=active]:shadow-none"
           >
-            Roles
+            User Management
           </TabsTrigger>
           <TabsTrigger
             value="eventTypes"
@@ -61,13 +61,13 @@ export function AdminSettings() {
             Groups
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="roles">
+        <TabsContent value="user-management">
           <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <h2 className="mb-4 text-2xl font-semibold">User Roles</h2>
+            <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
             <DataTable
               data={userData}
               columns={rolesColumns}
-              toolbar={RolesToolbar}
+              toolbar={UserManagementToolbar}
             />
           </div>
         </TabsContent>

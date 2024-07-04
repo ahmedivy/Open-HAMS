@@ -76,4 +76,45 @@ export const rolesColumns = [
       );
     },
   },
+  {
+    accessorKey: "tier",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tier" />
+    ),
+    cell: () => {
+      const tiers = [
+        {
+          label: "Tier 1",
+          value: "tier-1",
+        },
+        {
+          label: "Tier 2",
+          value: "tier-2",
+        },
+        {
+          label: "Tier 3",
+          value: "tier-3",
+        },
+        {
+          label: "Tier 4",
+          value: "tier-4",
+        },
+      ];
+
+      return (
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Tier" defaultValue="tier-4" />
+          </SelectTrigger>
+          <SelectContent>
+            {tiers.map((tier) => (
+              <SelectItem key={tier.value} value={tier.value}>
+                {tier.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    },
+  },
 ];

@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 
-export function RolesToolbar({ table }) {
+export function UserManagementToolbar({ table }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className=" flex flex-1 items-center space-x-2">
