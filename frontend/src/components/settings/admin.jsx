@@ -1,8 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "./tables/data-table";
 import { eventTypesColumns } from "./tables/event-types-col";
-import { rolesColumns } from "./tables/roles-col";
+import { userManagementColumns } from "./tables/user-management-col";
 import { UserManagementToolbar } from "./tables/user-management-toolbar";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { Button } from "../ui/button";
 import { groupColumns } from "./tables/groups-col";
@@ -66,7 +73,7 @@ export function AdminSettings() {
             <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
             <DataTable
               data={userData}
-              columns={rolesColumns}
+              columns={userManagementColumns}
               toolbar={UserManagementToolbar}
             />
           </div>
@@ -77,7 +84,19 @@ export function AdminSettings() {
               <h2 className="mb-4 text-2xl font-semibold">
                 Event Type Management
               </h2>
-              <Button>Add Event Type</Button>
+              <Dialog>
+                <DialogTrigger>
+                  <Button>Add Event Type</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <div className="grid gap-4">
+                    <div className="flex items-center justify-between">
+                      <DialogTitle>New Event Type</DialogTitle>
+                      <Button>Submit</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
             <DataTable
               data={eventTypeData}

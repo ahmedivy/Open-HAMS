@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const rolesColumns = [
+export const userManagementColumns = [
   {
     accessorKey: "image",
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
