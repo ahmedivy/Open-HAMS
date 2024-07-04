@@ -4,14 +4,8 @@ import { eventTypesColumns } from "./tables/event-types-col";
 import { userManagementColumns } from "./tables/user-management-col";
 import { UserManagementToolbar } from "./tables/user-management-toolbar";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
 import { Button } from "../ui/button";
+import { NewEventTypeModel } from "./models/new-event-type";
 import { groupColumns } from "./tables/groups-col";
 
 function getDummyUserData() {
@@ -84,19 +78,7 @@ export function AdminSettings() {
               <h2 className="mb-4 text-2xl font-semibold">
                 Event Type Management
               </h2>
-              <Dialog>
-                <DialogTrigger>
-                  <Button>Add Event Type</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                      <DialogTitle>New Event Type</DialogTitle>
-                      <Button>Submit</Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <NewEventTypeModel />
             </div>
             <DataTable
               data={eventTypeData}
