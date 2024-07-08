@@ -2,9 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Heart } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
-import { z } from "zod";
 
-import { signup } from "@/api/auth";
+import { register } from "@/api/auth";
+import { Spinner } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,53 +15,32 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { SignUpSchema, signupSchema } from "@/lib/schemas/auth";
 import { toast } from "sonner";
 
 export function SignUpPage() {
-  const formSchema = z.object({
-    first_name: z.string().min(2).max(50),
-    last_name: z.string().optional(),
-    username: z.string().min(2).max(50),
-    email: z.string().email(),
-    password: z.string().min(8).max(50),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignUpSchema>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: "",
-      password: "",
-      email: "",
       first_name: "",
       last_name: "",
-    },
+      email: "",
+      username: "",
+      password: "",
+    }
   });
 
-  function onSubmit(values) {
-    console.log(values);
-
-    toast.promise(
-      async () => {
-        try {
-          var data = await signup(values);
-        } catch (error) {
-          throw new Error(error.message);
-        }
-
-        console.log(data);
-      },
-      {
-        loading: "Signing Up...",
-        success: "Account created successfully",
-        error: (data) => {
-          return data.message || "Something went wrong";
-        },
-      },
-    );
+  async function onSubmit(values: SignUpSchema) {
+    const res = await register(values);
+    if (res.status === 201) {
+      toast.success(res.data.message);
+    } else {
+      toast.error(res.data.detail);
+    }
   }
 
   return (
-    <body className="flex min-h-screen flex-col bg-blueish">
+    <main className="flex min-h-screen flex-col bg-blueish">
       <div className="container grid h-full flex-1 grid-cols-1 px-4 lg:grid-cols-2 lg:py-24">
         <img
           src="serenity.png"
@@ -73,9 +52,9 @@ export function SignUpPage() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-8 w-full space-y-8 lg:mt-16"
+              className="mt-8 w-full space-y-4 lg:mt-8"
             >
-              <div className="grid w-full gap-3 md:grid-cols-2">
+              <div className="grid w-full gap-2 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="first_name"
@@ -147,8 +126,13 @@ export function SignUpPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting && <Spinner className="mr-2" />}
+                {form.formState.isSubmitting ? "Signing Up" : "Sign Up"}
               </Button>
             </form>
           </Form>
@@ -190,6 +174,6 @@ export function SignUpPage() {
           </Link>
         </div>
       </footer>
-    </body>
+    </main>
   );
 }

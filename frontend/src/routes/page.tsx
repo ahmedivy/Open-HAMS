@@ -3,8 +3,8 @@ import { Heart } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import { login } from "@/api/auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,63 +15,44 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { login } from "@/api/auth";
+import { loginSchema, LoginSchema } from "@/lib/schemas/auth";
 
 export function LoginPage() {
-  const formSchema = z.object({
-    username: z.string().min(2).max(50),
-    password: z.string().min(8).max(50),
-  });
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
-  function onSubmit(values) {
+  async function onSubmit(values: LoginSchema) {
     console.log(values);
 
-    toast.promise(
-      async () => {
-        try {
-          var data = await login(values);
-        } catch (error) {
-          throw new Error(error.message);
-        }
-
-        console.log(data);
-
-        const token = data.access_token;
-
-        localStorage.setItem("token", token);
-      },
-      {
-        loading: "Signing in...",
-        success: "Signed in successfully",
-        error: (data) => {
-          return data.message || "Something went wrong";
-        },
-      },
-    );
+    const res = await login(values);
+    if (res.status === 200) {
+      toast.success("Login successfully");
+    } else {
+      toast.error("Username or password is incorrect");
+    }
   }
 
   return (
-    <body className="flex min-h-screen flex-col bg-blueish">
-      <div className="container grid h-full flex-1 grid-cols-1 px-4 lg:grid-cols-2 lg:py-24">
-        <img
-          src="serenity.png"
-          alt="Scence Image"
-          className="hidden h-full rounded-xl lg:block"
-        />
-        <div className="flex flex-col items-center px-4 py-8 lg:px-32">
+    <main className="flex min-h-screen flex-col bg-blueish">
+      <div className="grid w-full flex-1 lg:grid-cols-2">
+        <div className="flex flex-col items-center justify-center">
+          <img
+            src="serenity.png"
+            alt="Scence Image"
+            className="hidden h-3/4  rounded-xl lg:block"
+          />
+        </div>
+        <div className="flex flex-col items-center justify-center py-12">
           <img src="logo.png" alt="Logo" className="size-28" />
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-8 w-full space-y-8 lg:mt-16"
+              className="mt-8  space-y-8 lg:mt-12"
             >
               <FormField
                 control={form.control}
@@ -111,7 +92,9 @@ export function LoginPage() {
               </Button>
             </form>
           </Form>
-          <Link className="mt-6 self-start text-sm">Forgot Password?</Link>
+          <Link className="mt-6 self-start text-sm" to="#">
+            Forgot Password?
+          </Link>
           <p className="mt-4">or</p>
           <Button
             className="mt-4 w-full"
@@ -151,6 +134,6 @@ export function LoginPage() {
           </Link>
         </div>
       </footer>
-    </body>
+    </main>
   );
 }
