@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 
 export function DashboardLayout() {
   return (
-      <body className="bg-body mx-auto flex min-h-screen bg-blueish">
+      <div className="bg-body mx-auto flex min-h-screen bg-blueish">
         <div className="fixed left-0 top-0 hidden h-full w-56 lg:block">
           <Sidebar />
         </div>
@@ -12,6 +12,6 @@ export function DashboardLayout() {
             <Outlet />
           </div>
         </main>
-      </body>
+      </div>
   );
 }
