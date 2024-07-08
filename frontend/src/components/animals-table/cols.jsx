@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { DataTableColumnHeader } from "./col-headers";
@@ -144,7 +145,7 @@ export const columns = [
     id: "actions",
     cell: () => (
       <Badge variant="secondary" className="font-thin">
-        edit
+        <Link to="/animals/923">edit</Link>
       </Badge>
     ),
   },
