@@ -44,7 +44,7 @@ export function Sidebar() {
         <img src="/logo.png" alt="logo" className="size-7" />
         <h1 className="text-[20px] font-bold tracking-tight">Open HAMS</h1>
       </Link>
-      <Search placeholder="Search..." className="mt-16" />
+      <Search placeholder="Search..." className="mt-16" name="q" />
       <nav className="mt-4 space-y-1">
         {routes.map((route) => (
           <SidebarItem key={route.path} {...route} />
@@ -75,7 +75,7 @@ function SidebarItem({ title, icon: Icon, active, path }) {
         active ? "bg-muted" : "hover:bg-muted",
       )}
     >
-      <Icon className="size-4 text-[#374151] dark:text-white font-semibold" />
+      <Icon className="size-4 font-semibold text-[#374151] dark:text-white" />
       <span className="text-[14px] text-muted-foreground">{title}</span>
     </Link>
   );
