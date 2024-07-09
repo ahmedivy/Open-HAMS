@@ -1,4 +1,4 @@
-import { LoginSchema, SignUpSchema } from "@/lib/schemas/auth";
+import { LoginSchema, SignUpSchema } from "@/api/schemas/auth";
 import instance from "./axios";
 
 export async function register(values: SignUpSchema) {

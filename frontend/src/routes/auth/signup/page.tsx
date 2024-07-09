@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 
 import { register } from "@/api/auth";
+import { SignUpSchema, signupSchema } from "@/api/schemas/auth";
 import { Spinner } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { SignUpSchema, signupSchema } from "@/lib/schemas/auth";
 import { toast } from "sonner";
 
 export function SignUpPage() {
@@ -39,7 +39,7 @@ export function SignUpPage() {
   }
 
   return (
-    <div className="w-full max-w-96 space-y-4 mt-4">
+    <div className="mt-4 w-full max-w-96 space-y-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid w-full gap-2 md:grid-cols-2">

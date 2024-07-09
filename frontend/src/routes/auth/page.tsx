@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { login } from "@/api/auth";
+import { loginSchema, LoginSchema } from "@/api/schemas/auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { loginSchema, LoginSchema } from "@/lib/schemas/auth";
 
 export function LoginPage() {
   const form = useForm<LoginSchema>({
