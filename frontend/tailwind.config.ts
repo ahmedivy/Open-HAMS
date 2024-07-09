@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+import { Config } from "tailwindcss";
 
 export default {
   darkMode: "class",
@@ -81,4 +81,4 @@ export default {
   },
   // eslint-disable-next-line no-undef
   plugins: [require("tailwindcss-animate")],
-};
+} as Config;
