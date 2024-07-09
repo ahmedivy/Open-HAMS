@@ -1,13 +1,16 @@
-import { cn } from "@/lib/utils";
 import { Activity, Dog, LayoutDashboard, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
+import { useUser } from "@/queries/user";
+import { cn } from "@/utils";
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { LoadingDots } from "./icons";
 import { Search } from "./ui/input";
 
 export function Sidebar() {
   const location = useLocation();
+  const { data: user, isLoading } = useUser();
 
   const routes = useMemo(() => {
     return [
@@ -50,23 +53,39 @@ export function Sidebar() {
           <SidebarItem key={route.path} {...route} />
         ))}
       </nav>
-      <Link className="mb-2 mt-auto flex gap-2" to="/settings">
-        <Avatar>
-          <AvatarImage src="/placeholder-avatar.png" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col">
-          <span className="text-[14px] font-bold">John Doe</span>
-          <span className="text-[12px] text-muted-foreground">
-            Account Settings
-          </span>
+      {isLoading ? (
+        <div className="mb-2 mt-auto flex w-full items-center justify-center gap-2">
+          <LoadingDots className="mx-auto size-4" />
         </div>
-      </Link>
+      ) : (
+        <Link className="mb-2 mt-auto flex gap-2" to="/settings">
+          <Avatar>
+            <AvatarImage src="/placeholder-avatar.png" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-[14px] font-bold">{`${user?.first_name} ${user?.last_name}`}</span>
+            <span className="text-[12px] text-muted-foreground">
+              Account Settings
+            </span>
+          </div>
+        </Link>
+      )}
     </aside>
   );
 }
 
-function SidebarItem({ title, icon: Icon, active, path }) {
+function SidebarItem({
+  title,
+  icon: Icon,
+  active,
+  path,
+}: {
+  title: string;
+  icon: any;
+  active: boolean;
+  path: string;
+}) {
   return (
     <Link
       to={path}
