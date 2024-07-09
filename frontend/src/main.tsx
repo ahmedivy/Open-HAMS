@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import "./index.css";
+import { AuthLayout } from "./routes/auth/layout";
+import { LoginPage } from "./routes/auth/page";
+import { SignUpPage } from "./routes/auth/signup/page";
 import { AnimalDetailsPage } from "./routes/dashboard/animals/[id]/page";
 import { AnimalsPage } from "./routes/dashboard/animals/page";
 import { EventsPage } from "./routes/dashboard/events/page";
@@ -11,15 +14,18 @@ import { DashboardPage } from "./routes/dashboard/page";
 import { SettingsPage } from "./routes/dashboard/settings/page";
 import { UsersPage } from "./routes/dashboard/users/page";
 import { RootLayout } from "./routes/layout";
-import { LoginPage } from "./routes/page";
-import { SignUpPage } from "./routes/signup/page";
 
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: "/", element: <LoginPage /> },
-      { path: "/signup", element: <SignUpPage /> },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "/", element: <LoginPage /> },
+          { path: "/signup", element: <SignUpPage /> },
+        ],
+      },
       {
         element: <DashboardLayout />,
         children: [
@@ -38,7 +44,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
   </React.StrictMode>,
