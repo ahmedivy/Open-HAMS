@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { login } from "@/api/auth";
 import { loginSchema, LoginSchema } from "@/api/schemas/auth";
+import { Spinner } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -31,6 +33,7 @@ export function LoginPage() {
     const res = await login(values);
     if (res.status === 200) {
       toast.success("Login successfully");
+      navigate("/dashboard");
     } else {
       toast.error("Username or password is incorrect");
     }
@@ -74,8 +77,15 @@ export function LoginPage() {
             )}
           />
           <div className="grid gap-2">
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting && (
+                <Spinner className="mr-2 size-4" />
+              )}
+              Log In
             </Button>
             <Link className="self-start text-sm" to="#">
               Forgot Password?
@@ -92,7 +102,7 @@ export function LoginPage() {
           toast.error("Login with Google is not avaiable yet");
         }}
       >
-        Sign In with Google
+        Log In with Google
       </Button>
       <p className="mt-6 self-start text-sm">
         Didn&apos;t have an account?

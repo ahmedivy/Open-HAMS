@@ -119,7 +119,7 @@ export function SignUpPage() {
             className="w-full"
             disabled={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting && <Spinner className="mr-2" />}
+            {form.formState.isSubmitting && <Spinner className="mr-2 size-4" />}
             {form.formState.isSubmitting ? "Signing Up" : "Sign Up"}
           </Button>
         </form>
