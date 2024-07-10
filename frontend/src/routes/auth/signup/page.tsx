@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { register } from "@/api/auth";
 import { SignUpSchema, signupSchema } from "@/api/schemas/auth";
@@ -28,11 +28,13 @@ export function SignUpPage() {
       password: "",
     },
   });
+  const navigate = useNavigate();
 
   async function onSubmit(values: SignUpSchema) {
     const res = await register(values);
     if (res.status === 201) {
       toast.success(res.data.message);
+      navigate("/");
     } else {
       toast.error(res.data.detail);
     }
