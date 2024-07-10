@@ -9,37 +9,7 @@ import { useQuery } from "react-query";
 import { NewEventTypeModel } from "./models/new-event-type";
 import { DataTable } from "./tables/user-management/user-management-data-table";
 
-function getDummyUserData() {
-  return Array.from({ length: 5 }).map(() => ({
-    image: "/placeholder-avatar.png",
-    name: `Max`,
-    role: `Admin`,
-    group: "group-2",
-  }));
-}
-
-// function getDummyEventTypeData() {
-//   return Array.from({ length: 5 }).map(() => ({
-//     image: "/placeholder-avatar.png",
-//     eventTypeName: `Event Type`,
-//     group: "group-2",
-//   }));
-// }
-
-// function getDummyGroupData() {
-//   return Array.from({ length: 5 }).map(() => ({
-//     image: "/placeholder-avatar.png",
-//     name: `Max`,
-//     role: `Admin`,
-//     group: "group-2",
-//   }));
-// }
-
 export function AdminSettings() {
-  // const userData = getDummyUserData();
-  // const eventTypeData = getDummyEventTypeData();
-  // const groupData = getDummyGroupData();
-
   const { data: users, isLoading } = useQuery<User[]>({
     queryFn: getUsers,
     queryKey: ["users"],
