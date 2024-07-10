@@ -129,11 +129,11 @@ async def get_authenticated_user_permissions(current_user: CurrentUser):
 
 
 @router.get("/{user_id}")
-async def get_user(user_id: int, session: SessionDep, _: CurrentUser):
+async def get_user(user_id: int, session: SessionDep, _: CurrentUser) -> UserWithRole:
     user = await get_user_by_id(user_id, session)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return user  # type: ignore
 
 
 @router.delete("/{user_id}")
@@ -207,4 +207,4 @@ async def update_user_tier(
 
     user.tier = tierIn.tier
     await session.commit()
-    return {"message": f'Tier updated to {tierIn.tier}'}
+    return {"message": f"Tier updated to {tierIn.tier}"}
