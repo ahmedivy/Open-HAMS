@@ -25,6 +25,23 @@ export const loginSchema = z.object({
     .max(50),
 });
 
+export const changePasswordFormSchema = z.object({
+  currentPassword: z.string().min(8).max(50),
+  newPassword: z.string().min(8).max(50),
+  confirmPassword: z.string().min(8).max(50),
+});
+
+export const updateProfileSchema = z.object({
+  first_name: z
+    .string()
+    .min(2, "First name is too short")
+    .max(50, "First name is too long"),
+  last_name: z.string().optional(),
+  email: z.string().email("Invalid email address"),
+});
+
 // export schmema types
 export type SignUpSchema = z.infer<typeof signupSchema>;
 export type LoginSchema = z.infer<typeof loginSchema>;
+export type ChangePasswordSchema = z.infer<typeof changePasswordFormSchema>;
+export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;

@@ -38,6 +38,6 @@ export async function login(values: LoginSchema) {
   return res;
 }
 
-export async function logout() {
+export function logout() {
   localStorage.removeItem("token");
 }
