@@ -1,6 +1,12 @@
 from datetime import timedelta
 from typing import Annotated
 
+from fastapi import APIRouter, Body, Depends, status
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlmodel import select
+from starlette.exceptions import HTTPException
+
 from api.deps import CurrentUser, SessionDep
 from core.security import (
     create_access_token,
@@ -11,12 +17,8 @@ from db.roles import get_role
 from db.users import get_user_by_email, get_user_by_id, get_user_by_username
 from db.utils import has_permission
 from db.zoo import get_main_zoo
-from fastapi import APIRouter, Body, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from models import User, UserWithRole
-from schemas import RoleIn, Token, UserCreate, UserUpdate
-from sqlmodel import select
-from starlette.exceptions import HTTPException
+from schemas import RoleIn, TierIn, Token, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -28,6 +30,8 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep
 ) -> Token:
     user = await get_user_by_username(form_data.username, session)
+    if not user:
+        user = await get_user_by_email(form_data.username, session)
 
     if not user:
         raise HTTPException(
@@ -47,6 +51,7 @@ async def login(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -75,12 +80,12 @@ async def delete_users(session: SessionDep, user: CurrentUser):
 async def create_user(session: SessionDep, user: UserCreate):
     # check if username or email already exists
     user_exists = await get_user_by_username(user.username, session)
-    user_exists = user_exists or await get_user_by_email(user.email, session)
-
     if user_exists:
-        raise HTTPException(
-            status_code=400, detail="Something went wrong. Please try again."
-        )
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    user_exists = await get_user_by_email(user.email, session)
+    if user_exists:
+        raise HTTPException(status_code=400, detail="Try another email address")
 
     # get basic role
     role = await get_role("visitor", session)
@@ -98,37 +103,29 @@ async def create_user(session: SessionDep, user: UserCreate):
     )  # type: ignore
     session.add(new_user)
     await session.commit()
-    return {"message": "User created"}
+    return JSONResponse({"message": "User created"}, status_code=201)
 
 
-@router.put("/{user_id}")
+@router.put("/me")
 async def update_user(
-    user_id: int,
     session: SessionDep,
     current_user: CurrentUser,
     user: UserUpdate = Body(),
 ):
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized to update this user",
-        )
-
     current_user.first_name = user.first_name
     current_user.last_name = user.last_name
-    current_user.username = user.username
     await session.commit()
-    return {"message": "Information updated"}
+    return JSONResponse({"message": "Information updated"}, status_code=200)
 
 
 @router.get("/me")
-async def get_authenticated_user(current_user: CurrentUser) -> User:
-    return current_user
+async def get_authenticated_user(current_user: CurrentUser) -> UserWithRole:
+    return current_user  # type: ignore
 
 
 @router.get("/me/permissions")
 async def get_authenticated_user_permissions(current_user: CurrentUser):
-    return current_user.role.permissions
+    return current_user.role.permissions  # type: ignore
 
 
 @router.get("/{user_id}")
@@ -161,7 +158,7 @@ async def update_user_role(
     user_id: int,
     session: SessionDep,
     current_user: CurrentUser,
-    role: RoleIn = Body(...),
+    roleIn: RoleIn = Body(...),
 ):
     if current_user.role.name != "admin":
         raise HTTPException(
@@ -169,7 +166,7 @@ async def update_user_role(
             detail="You do not have permission to update roles",
         )
 
-    role = await get_role(role.name, session)  # type: ignore
+    role = await get_role(roleIn.name, session)  # type: ignore
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
 
@@ -177,10 +174,12 @@ async def update_user_role(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.role = role  # type: ignore
+    user.role_id = role.id  # type: ignore
 
     await session.commit()
-    return {"message": "Role updated"}
+    return JSONResponse(
+        {"message": f"Role updated to {roleIn.name.capitalize()}"}, status_code=200
+    )
 
 
 @router.put("/{user_id}/tier")
@@ -188,15 +187,15 @@ async def update_user_tier(
     user_id: int,
     session: SessionDep,
     current_user: CurrentUser,
-    tier: int = Body(...),
+    tierIn: TierIn = Body(...),
 ):
     if not has_permission(current_user.role.permissions, "manage_users"):
         raise HTTPException(
             status_code=401,
             detail="You do not have permission to update user tiers",
         )
-    
-    if tier < 1 or tier > 4:
+
+    if tierIn.tier < 1 or tierIn.tier > 4:
         raise HTTPException(
             status_code=400,
             detail="Tier must be between 1 and 4",
@@ -206,6 +205,6 @@ async def update_user_tier(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.tier = tier
+    user.tier = tierIn.tier
     await session.commit()
-    return {"message": "Tier updated"}
+    return {"message": f'Tier updated to {tierIn.tier}'}

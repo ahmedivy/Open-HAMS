@@ -1,7 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
-from core.utils import created_at_field, updated_at_field
 from sqlmodel import Field, Relationship, SQLModel
+
+from core.utils import created_at_field, updated_at_field
 
 
 class RolePermission(SQLModel, table=True):
