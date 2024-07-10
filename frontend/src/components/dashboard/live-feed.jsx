@@ -1,5 +1,5 @@
 import { Dog } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "../ui/scroll-area";
 
 export function LiveFeed() {
   var liveFeed = [
@@ -18,7 +18,7 @@ export function LiveFeed() {
   return (
     <ScrollArea className="h-[450px] rounded-lg border bg-white p-4 shadow-sm lg:p-8">
       <h2 className="text-lg font-bold text-foreground">Activity Feed</h2>
-      <div className="mb-6 mt-4 lg:max-w-[450px] space-y-4">
+      <div className="mb-6 mt-4 space-y-4 lg:max-w-[450px]">
         <h2 className="text-lg text-foreground">Today</h2>
         {liveFeed.map((feed, index) => (
           <ActivityItem key={index} feed={feed} />

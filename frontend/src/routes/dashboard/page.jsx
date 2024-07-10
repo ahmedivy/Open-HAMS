@@ -1,12 +1,12 @@
-import { ScrollList } from "@/components/scroll-list";
+import { ScrollList } from "@/components/dashboard/scroll-list";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
+import { LiveFeed } from "@/components/dashboard/live-feed";
 import { EventsCalendar } from "@/components/events-calendar";
 import { Sidebar } from "@/components/sidebar";
-import { LiveFeed } from "@/components/live-feed";
 
 export function DashboardPage() {
   return (

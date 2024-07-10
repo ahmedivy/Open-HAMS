@@ -1,14 +1,14 @@
 import { useState } from "react";
 
-import { Calendar } from "./ui/calendar";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
 
 import { Heart, Pencil } from "lucide-react";
 
 export function EventsCalendar() {
   const [date, setDate] = useState(new Date());
   return (
-    <div className="grid min-h-[450px] gap-8 rounded-lg bg-white px-8 py-10 shadow-sm border md:grid-cols-2">
+    <div className="grid min-h-[450px] gap-8 rounded-lg border bg-white px-8 py-10 shadow-sm md:grid-cols-2">
       <Calendar
         mode="single"
         selected={date}
