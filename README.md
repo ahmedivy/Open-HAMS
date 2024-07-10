@@ -47,14 +47,14 @@ We welcome contributions to both the frontend and backend of Open HAMS. Please r
 
 ![TeKmy2fy_400x400 1](https://github.com/tyball21/Open-HAMS/assets/3166051/0e2a4e7e-1294-4ed6-96ad-e42912ad9685)
 
-A special thank you to the Utah Hogel Zoo and their amazing team: Bob Cisneros, Autumn Henry, and Waqas Javed. Your support and collaboration have been invaluable to this open source project.
+A special thank you to the Utah Hogle Zoo and their amazing team: Bob Cisneros, Autumn Henry, and Waqas Javed. Your support and collaboration have been invaluable to this open source project.
 
 
 ## License
 
 MIT License
 
-Copyright (c) [2024] Open HAMS and The Hogel Zoo
+Copyright (c) [2024] Open HAMS and The Hogle Zoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
