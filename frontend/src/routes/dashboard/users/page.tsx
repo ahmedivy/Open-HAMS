@@ -2,25 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
+import { getUsers } from "@/api/user";
 import { Sidebar } from "@/components/sidebar";
-import { columns } from "@/components/users-table/cols";
-import { DataTable } from "@/components/users-table/data-table";
-
-function getDummyData() {
-  return Array.from({ length: 5 }).map((_, index) => ({
-    image: "/placeholder-avatar.png",
-    name: `User ${index + 1}`,
-    email: `user${index + 1}@HAMS.com`,
-    role: Math.random() > 0.5 ? "Admin" : "User",
-    lastAction: "New Event",
-    actionDate: "2021-09-01",
-    deptName: "Ambassador",
-    createdAt: "2021-09-01",
-  }));
-}
+import { DataTable } from "@/components/tables/table-commons/data-table";
+import { columns } from "@/components/tables/users-table/cols";
+import { Loading } from "@/routes/loading";
+import { useQuery } from "react-query";
 
 export function UsersPage() {
-  const data = getDummyData();
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUsers,
+  });
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <>
@@ -42,7 +39,7 @@ export function UsersPage() {
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Users</h2>
-        <DataTable data={data} columns={columns} />
+        <DataTable data={users} columns={columns} />
       </div>
     </>
   );

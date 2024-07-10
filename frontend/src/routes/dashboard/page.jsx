@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
 import { LiveFeed } from "@/components/dashboard/live-feed";
-import { EventsCalendar } from "@/components/events-calendar";
+import { EventsCalendar } from "@/components/dashboard/events-calendar";
 import { Sidebar } from "@/components/sidebar";
 
 export function DashboardPage() {

@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DataTableColumnHeader } from "../col-header";
+import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 import { ColumnDef } from "@tanstack/react-table";
 

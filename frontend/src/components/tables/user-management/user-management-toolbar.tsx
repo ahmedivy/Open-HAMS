@@ -3,7 +3,7 @@ import { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTableViewOptions } from "../view-options";
+import { DataTableViewOptions } from "../table-commons/view-options";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

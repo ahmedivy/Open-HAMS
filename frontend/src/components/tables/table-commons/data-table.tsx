@@ -1,4 +1,8 @@
 import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -20,13 +24,24 @@ import {
 } from "@/components/ui/table";
 
 import { DataTablePagination } from "./pagination";
-import { DataTableToolbar } from "./toolbar";
+import { DataTableToolbar } from "../user-management/user-management-toolbar";
 
-export function DataTable({ columns, data }) {
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+}
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState([]);
-  const [sorting, setSorting] = React.useState([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
@@ -51,13 +66,13 @@ export function DataTable({ columns, data }) {
   });
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4">
       <DataTableToolbar table={table} />
       <div className="rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="">
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} colSpan={header.colSpan}>
@@ -79,7 +94,6 @@ export function DataTable({ columns, data }) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="border-0"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

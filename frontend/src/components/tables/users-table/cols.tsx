@@ -1,22 +1,24 @@
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Badge } from "../ui/badge";
-import { DataTableColumnHeader } from "./col-headers";
+import { User } from "@/utils/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTableColumnHeader } from "../table-commons/col-headers";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Badge } from "../../ui/badge";
 
-export const columns = [
+export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "image",
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
     cell: ({ row }) => (
       <Avatar className="m-2">
-        <AvatarImage src={row.getValue("image")} alt={row.getValue("name")} />
-        <AvatarFallback>{row.getValue("name")[0]}</AvatarFallback>
+        <AvatarImage src="/placeholder-avatar.png" alt={row.getValue("name")} />
+        <AvatarFallback>{row.original.first_name[0]}</AvatarFallback>
       </Avatar>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: "name",
+    id: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
@@ -27,9 +29,7 @@ export const columns = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return row[id].toLowerCase().includes(value.toLowerCase());
-    },
+    accessorFn: (row) => `${row.first_name} ${row.last_name}`,
   },
   {
     accessorKey: "email",
@@ -43,12 +43,9 @@ export const columns = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return row[id].toLowerCase().includes(value.toLowerCase());
-    },
   },
   {
-    accessorKey: "role",
+    id: "role",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Role" />
     ),
@@ -59,12 +56,10 @@ export const columns = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return row[id].toLowerCase().includes(value.toLowerCase());
-    },
+    accessorFn: (row) => row.role?.name,
   },
   {
-    accessorKey: "lastAction",
+    id: "lastAction",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Action" />
     ),
@@ -75,12 +70,10 @@ export const columns = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return row[id].toLowerCase().includes(value.toLowerCase());
-    },
+    accessorFn: (row) => "N/A",
   },
   {
-    accessorKey: "actionDate",
+    id: "actionDate",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Action Date" />
     ),
@@ -91,21 +84,20 @@ export const columns = [
         </div>
       );
     },
+    accessorFn: (row) => row.updated_at,
   },
   {
-    accessorKey: "deptName",
+    id: "deptName",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Department Name" />
     ),
     cell: ({ row }) => {
       return <p>{row.getValue("deptName")}</p>;
     },
-    filterFn: (row, id, value) => {
-      return row[id].toLowerCase().includes(value.toLowerCase());
-    },
+    accessorFn: (row) => "Hoggle Zoo",
   },
   {
-    accessorKey: "createdAt",
+    id: "createdAt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Account Created At" />
     ),
@@ -116,6 +108,7 @@ export const columns = [
         </div>
       );
     },
+    accessorFn: (row) => row.created_at,
   },
   {
     id: "actions",

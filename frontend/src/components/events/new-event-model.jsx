@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { DateRangePicker } from "../data-range-picker";
+import { DateRangePicker } from "../dashboard/data-range-picker";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";

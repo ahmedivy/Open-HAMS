@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateRangePicker } from "../data-range-picker";
+import { DateRangePicker } from "../dashboard/data-range-picker";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 
