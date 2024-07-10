@@ -39,19 +39,19 @@ export function Sidebar() {
         title: "Animals",
         icon: Dog,
         path: "/animals",
-        active: location.pathname === "/animals",
+        active: location.pathname.startsWith("/animals"),
       },
       {
         title: "Events",
         icon: Activity,
         path: "/events",
-        active: location.pathname === "/events",
+        active: location.pathname.startsWith("/events"),
       },
       {
         title: "Users",
         icon: User,
         path: "/users",
-        active: location.pathname === "/users",
+        active: location.pathname.startsWith("/users"),
       },
     ];
   }, [location.pathname]);
