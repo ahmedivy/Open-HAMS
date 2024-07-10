@@ -5,8 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/queries/user";
 import { Loading } from "@/routes/loading";
 import { Heart } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 export function SettingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: user, isLoading } = useUser();
 
   if (isLoading) {
@@ -16,7 +18,13 @@ export function SettingsPage() {
   return (
     <main>
       <h1 className="mt-6 text-2xl font-bold">Settings</h1>
-      <Tabs defaultValue="general" className="mt-6">
+      <Tabs
+        value={searchParams.get("tab") || "general"}
+        className="mt-6"
+        onValueChange={(value) => {
+          setSearchParams({ tab: value });
+        }}
+      >
         <div className="flex w-full items-center justify-between">
           <TabsList className="bg-[#E6EEF5]">
             <TabsTrigger
