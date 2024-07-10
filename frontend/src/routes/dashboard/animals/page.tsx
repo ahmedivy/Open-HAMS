@@ -2,26 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
-import { columns } from "@/components/animals-table/cols";
-import { DataTable } from "@/components/animals-table/data-table";
 import { Sidebar } from "@/components/sidebar";
+import { AnimalModel } from "@/components/models/animal-model";
 
-function getDummyData() {
-  return Array.from({ length: 5 }).map((_, index) => ({
-    image: "/placeholder-avatar.png",
-    name: `Cat ${index + 1}`,
-    breed: "Domestic Short Hair",
-    age: 4,
-    species: "Cat",
-    status: "Checked In",
-    lastAction: "Checked In",
-    lastCompletedBy: "John Doe",
-    date: "2021-09-01",
-  }));
-}
+// function getDummyData() {
+//   return Array.from({ length: 5 }).map((_, index) => ({
+//     image: "/placeholder-avatar.png",
+//     name: `Cat ${index + 1}`,
+//     breed: "Domestic Short Hair",
+//     age: 4,
+//     species: "Cat",
+//     status: "Checked In",
+//     lastAction: "Checked In",
+//     lastCompletedBy: "John Doe",
+//     date: "2021-09-01",
+//   }));
+// }
 
 export function AnimalsPage() {
-  const data = getDummyData();
+  // const data = getDummyData();
 
   return (
     <>
@@ -36,14 +35,18 @@ export function AnimalsPage() {
             <Sidebar />
           </SheetContent>
         </Sheet>
-        <Button className="ml-auto">
-          <Plus className="mr-2 size-4" />
-          Add New Animal
-        </Button>
+        <div className="ml-auto">
+          <AnimalModel mode="add">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              Add New Animal
+            </Button>
+          </AnimalModel>
+        </div>
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Animals</h2>
-        <DataTable data={data} columns={columns} />
+        {/* <DataTable data={data} columns={columns} /> */}
       </div>
     </>
   );

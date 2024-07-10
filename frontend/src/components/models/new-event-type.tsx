@@ -19,7 +19,7 @@ import {
 
 export function NewEventTypeModel() {
   return (
-    <Dialog className="bg-blueish">
+    <Dialog>
       <DialogTrigger>
         <Button>Add Event Type</Button>
       </DialogTrigger>

@@ -6,7 +6,7 @@ import { useRoles } from "@/queries/roles";
 import { Loading } from "@/routes/loading";
 import { User } from "@/utils/types";
 import { useQuery } from "react-query";
-import { NewEventTypeModel } from "./models/new-event-type";
+import { NewEventTypeModel } from "../models/new-event-type";
 import { DataTable } from "../tables/table-commons/data-table";
 
 export function AdminSettings() {
