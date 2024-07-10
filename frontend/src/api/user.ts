@@ -16,7 +16,12 @@ export async function updateUser(values: UpdateProfileSchema) {
 export async function getUsers() {
   const res = await instance.get("/users/");
   console.log(res.data);
-  return res.data;
+  return res.data as User[];
+}
+
+export async function getUser(userId: number) {
+  const res = await instance.get(`/users/${userId}/`);
+  return res.data as User;
 }
 
 export async function updateRole(userId: number, role: string) {
