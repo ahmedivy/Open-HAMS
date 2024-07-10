@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DataTableColumnHeader } from "./col-headers";
+import { DataTableColumnHeader } from "./col-header";
 
 import {
   Select,

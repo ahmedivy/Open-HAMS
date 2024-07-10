@@ -1,12 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable } from "./tables/data-table";
-import { eventTypesColumns } from "./tables/event-types-col";
-import { userManagementColumns } from "./tables/user-management-col";
-import { UserManagementToolbar } from "./tables/user-management-toolbar";
+import { userManagementColumns } from "./tables/user-management/user-management-cols";
 
-import { Button } from "../ui/button";
+import { getUsers } from "@/api/user";
+import { useRoles } from "@/queries/roles";
+import { Loading } from "@/routes/loading";
+import { User } from "@/utils/types";
+import { useQuery } from "react-query";
 import { NewEventTypeModel } from "./models/new-event-type";
-import { groupColumns } from "./tables/groups-col";
+import { DataTable } from "./tables/user-management/user-management-data-table";
 
 function getDummyUserData() {
   return Array.from({ length: 5 }).map(() => ({
@@ -17,27 +18,38 @@ function getDummyUserData() {
   }));
 }
 
-function getDummyEventTypeData() {
-  return Array.from({ length: 5 }).map(() => ({
-    image: "/placeholder-avatar.png",
-    eventTypeName: `Event Type`,
-    group: "group-2",
-  }));
-}
+// function getDummyEventTypeData() {
+//   return Array.from({ length: 5 }).map(() => ({
+//     image: "/placeholder-avatar.png",
+//     eventTypeName: `Event Type`,
+//     group: "group-2",
+//   }));
+// }
 
-function getDummyGroupData() {
-  return Array.from({ length: 5 }).map(() => ({
-    image: "/placeholder-avatar.png",
-    name: `Max`,
-    role: `Admin`,
-    group: "group-2",
-  }));
-}
+// function getDummyGroupData() {
+//   return Array.from({ length: 5 }).map(() => ({
+//     image: "/placeholder-avatar.png",
+//     name: `Max`,
+//     role: `Admin`,
+//     group: "group-2",
+//   }));
+// }
 
 export function AdminSettings() {
-  const userData = getDummyUserData();
-  const eventTypeData = getDummyEventTypeData();
-  const groupData = getDummyGroupData();
+  // const userData = getDummyUserData();
+  // const eventTypeData = getDummyEventTypeData();
+  // const groupData = getDummyGroupData();
+
+  const { data: users, isLoading } = useQuery<User[]>({
+    queryFn: getUsers,
+    queryKey: ["users"],
+  });
+
+  const { isLoading: rolesLoading } = useRoles();
+
+  if (isLoading || rolesLoading) {
+    return <Loading />;
+  }
 
   return (
     <section className="mt-8 w-full rounded-md bg-white p-8 shadow-sm">
@@ -65,11 +77,7 @@ export function AdminSettings() {
         <TabsContent value="user-management">
           <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
             <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
-            <DataTable
-              data={userData}
-              columns={userManagementColumns}
-              toolbar={UserManagementToolbar}
-            />
+            <DataTable data={users!} columns={userManagementColumns} />
           </div>
         </TabsContent>
         <TabsContent value="eventTypes">
@@ -80,24 +88,11 @@ export function AdminSettings() {
               </h2>
               <NewEventTypeModel />
             </div>
-            <DataTable
+            {/* <DataTable
               data={eventTypeData}
               columns={eventTypesColumns}
               toolbar={"none"}
-            />
-          </div>
-        </TabsContent>
-        <TabsContent value="groups">
-          <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <div className="flex w-full items-center justify-between">
-              <h2 className="mb-4 text-2xl font-semibold">Group Management</h2>
-              <Button>Add Group</Button>
-            </div>
-            <DataTable
-              data={groupData}
-              columns={groupColumns}
-              toolbar={"none"}
-            />
+            /> */}
           </div>
         </TabsContent>
       </Tabs>

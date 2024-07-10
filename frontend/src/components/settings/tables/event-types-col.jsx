@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { DataTableColumnHeader } from "./col-headers";
+import { DataTableColumnHeader } from "./col-header";
 
 import { Badge } from "@/components/ui/badge";
 import {

@@ -1,8 +1,7 @@
-import { CheckIcon, PlusCircledIcon } from "@radix-ui/react-icons"
+import { CheckIcon, PlusCircledIcon } from "@radix-ui/react-icons";
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -10,18 +9,19 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator
-} from "@/components/ui/command"
+  CommandSeparator,
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/utils";
 
 export function DataTableFacetedFilter({ column, title, options }) {
-  const facets = column?.getFacetedUniqueValues()
-  const selectedValues = new Set(column?.getFilterValue())
+  const facets = column?.getFacetedUniqueValues();
+  const selectedValues = new Set(column?.getFilterValue());
 
   return (
     <Popover>
@@ -48,8 +48,8 @@ export function DataTableFacetedFilter({ column, title, options }) {
                   </Badge>
                 ) : (
                   options
-                    .filter(option => selectedValues.has(option.value))
-                    .map(option => (
+                    .filter((option) => selectedValues.has(option.value))
+                    .map((option) => (
                       <Badge
                         variant="secondary"
                         key={option.value}
@@ -70,21 +70,21 @@ export function DataTableFacetedFilter({ column, title, options }) {
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {options.map(option => {
-                const isSelected = selectedValues.has(option.value)
+              {options.map((option) => {
+                const isSelected = selectedValues.has(option.value);
                 return (
                   <CommandItem
                     key={option.value}
                     onSelect={() => {
                       if (isSelected) {
-                        selectedValues.delete(option.value)
+                        selectedValues.delete(option.value);
                       } else {
-                        selectedValues.add(option.value)
+                        selectedValues.add(option.value);
                       }
-                      const filterValues = Array.from(selectedValues)
+                      const filterValues = Array.from(selectedValues);
                       column?.setFilterValue(
-                        filterValues.length ? filterValues : undefined
-                      )
+                        filterValues.length ? filterValues : undefined,
+                      );
                     }}
                   >
                     <div
@@ -92,7 +92,7 @@ export function DataTableFacetedFilter({ column, title, options }) {
                         "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                         isSelected
                           ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
+                          : "opacity-50 [&_svg]:invisible",
                       )}
                     >
                       <CheckIcon className={cn("h-4 w-4")} />
@@ -102,12 +102,12 @@ export function DataTableFacetedFilter({ column, title, options }) {
                     )}
                     <span>{option.label}</span>
                     {facets?.get(option.value) && (
-                      <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
+                      <span className="font-mono ml-auto flex h-4 w-4 items-center justify-center text-xs">
                         {facets.get(option.value)}
                       </span>
                     )}
                   </CommandItem>
-                )
+                );
               })}
             </CommandGroup>
             {selectedValues.size > 0 && (
@@ -127,5 +127,5 @@ export function DataTableFacetedFilter({ column, title, options }) {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

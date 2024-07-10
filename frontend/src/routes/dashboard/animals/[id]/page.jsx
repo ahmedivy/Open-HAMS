@@ -1,7 +1,7 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { useParams } from "react-router-dom";
 
 export function AnimalDetailsPage() {
@@ -11,7 +11,7 @@ export function AnimalDetailsPage() {
 
   return (
     <main>
-      <section className="flex w-full gap-4 pb-4 pt-8 px-12 lg:gap-8">
+      <section className="flex w-full gap-4 px-12 pb-4 pt-8 lg:gap-8">
         <div className="flex h-full w-1/3 flex-col justify-between gap-4 rounded-md bg-white p-6 shadow-sm">
           <Avatar className="mx-auto size-28">
             <AvatarImage src="/placeholder-avatar.png" />

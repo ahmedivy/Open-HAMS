@@ -1,15 +1,30 @@
-import { Activity, Dog, LayoutDashboard, User } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-
+import { logout } from "@/api/auth";
 import { useUser } from "@/queries/user";
 import { cn } from "@/utils";
+import {
+  Activity,
+  Dog,
+  EllipsisVertical,
+  LayoutDashboard,
+  User,
+} from "lucide-react";
 import { useMemo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { LoadingDots } from "./icons";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Search } from "./ui/input";
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { data: user, isLoading } = useUser();
 
   const routes = useMemo(() => {
@@ -58,17 +73,36 @@ export function Sidebar() {
           <LoadingDots className="mx-auto size-4" />
         </div>
       ) : (
-        <Link className="mb-2 mt-auto flex gap-2" to="/settings">
+        <Link className="mb-2 mt-auto flex w-full" to="/settings">
           <Avatar>
             <AvatarImage src="/placeholder-avatar.png" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="text-[14px] font-bold">{`${user?.first_name} ${user?.last_name}`}</span>
+          <div className="ml-2 flex flex-col">
+            <span className="text-[14px] font-bold">{`${user?.first_name}`}</span>
             <span className="text-[12px] text-muted-foreground">
               Account Settings
             </span>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={"ghost"} size={"icon"} className="ml-auto">
+                <EllipsisVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  logout();
+                  toast.success("Logged out successfully");
+                  navigate("/");
+                }}
+              >
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </Link>
       )}
     </aside>

@@ -1,4 +1,6 @@
 import { CheckIcon, PlusCircledIcon } from "@radix-ui/react-icons";
+import { Column } from "@tanstack/react-table";
+import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,9 +21,26 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/utils";
 
-export function DataTableFacetedFilter({ column, title, options }) {
+interface DataTableFacetedFilterProps<TData, TValue> {
+  column?: Column<TData, TValue>;
+  title?: string;
+  options: {
+    label: string;
+    value: string;
+    icon?: React.ComponentType<{ className?: string }>;
+  }[];
+}
+
+export function DataTableFacetedFilter<TData, TValue>({
+  column,
+  title,
+  options,
+}: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues();
-  const selectedValues = new Set(column?.getFilterValue());
+  const selectedValues = new Set(column?.getFilterValue() as string[]);
+
+  console.log("selectedValues", selectedValues);
+  console.log("facets", facets);
 
   return (
     <Popover>
@@ -75,6 +94,7 @@ export function DataTableFacetedFilter({ column, title, options }) {
                 return (
                   <CommandItem
                     key={option.value}
+                    className=""
                     onSelect={() => {
                       if (isSelected) {
                         selectedValues.delete(option.value);
@@ -100,7 +120,7 @@ export function DataTableFacetedFilter({ column, title, options }) {
                     {option.icon && (
                       <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                     )}
-                    <span>{option.label}</span>
+                    <span className="text-black">{option.label}</span>
                     {facets?.get(option.value) && (
                       <span className="font-mono ml-auto flex h-4 w-4 items-center justify-center text-xs">
                         {facets.get(option.value)}

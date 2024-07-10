@@ -1,8 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage } from "../ui/avatar";
 
-import { z } from "zod";
-
+import {
+  changePasswordFormSchema,
+  ChangePasswordSchema,
+  UpdateProfileSchema,
+  updateProfileSchema,
+} from "@/api/schemas/auth";
+import { updateUser } from "@/api/user";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,8 +18,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useUser } from "@/queries/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "react-query";
+import { Spinner } from "../icons";
 import {
   Select,
   SelectContent,
@@ -23,37 +31,34 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Switch } from "../ui/switch";
+import { toast } from "sonner";
 
 export function GeneralSettings() {
-  const updateProfileSchema = z.object({
-    firstname: z
-      .string()
-      .min(2, "First name is too short")
-      .max(50, "First name is too long"),
-    lastname: z
-      .string()
-      .min(2, "Last name is too short")
-      .max(50, "Last name is too long"),
-    email: z.string().email(),
-  });
+  const { data: user } = useUser();
+  const queryClient = useQueryClient();
 
-  const updateProfileForm = useForm({
-    resolver: zodResolver(updateProfileSchema),
-    defaultValues: {
-      username: "",
-      password: "",
+  const updateUserMutation = useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      // Invalidate and refetch
+      toast.success("Profile updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     },
   });
 
-  function updateProfileSubmit(values) {
-    console.log(values);
-  }
-
-  const changePasswordFormSchema = z.object({
-    currentPassword: z.string().min(8).max(50),
-    newPassword: z.string().min(8).max(50),
-    confirmPassword: z.string().min(8).max(50),
+  const updateProfileForm = useForm<UpdateProfileSchema>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      first_name: user?.first_name,
+      last_name: user?.last_name,
+      email: user?.email,
+    },
   });
+
+  function updateProfileSubmit(values: UpdateProfileSchema) {
+    console.log(values);
+    updateUserMutation.mutate(values);
+  }
 
   const changePasswordForm = useForm({
     resolver: zodResolver(changePasswordFormSchema),
@@ -64,7 +69,7 @@ export function GeneralSettings() {
     },
   });
 
-  function changePasswordSubmit(values) {
+  function changePasswordSubmit(values: ChangePasswordSchema) {
     console.log(values);
   }
 
@@ -100,7 +105,7 @@ export function GeneralSettings() {
               >
                 <FormField
                   control={updateProfileForm.control}
-                  name="firstname"
+                  name="first_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
@@ -113,7 +118,7 @@ export function GeneralSettings() {
                 />
                 <FormField
                   control={updateProfileForm.control}
-                  name="lastname"
+                  name="last_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
@@ -131,13 +136,20 @@ export function GeneralSettings() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter email" />
+                        <Input {...field} placeholder="Enter email" readOnly />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={updateUserMutation.isLoading}
+                >
+                  {updateUserMutation.isLoading && (
+                    <Spinner className="mr-2 size-4" />
+                  )}
                   Save
                 </Button>
               </form>
@@ -204,9 +216,9 @@ export function GeneralSettings() {
                 </Button>
               </form>
             </Form>
-            <div className="flex w-full flex-col gap-6 mt-20">
-              <Select className="w-full ">
-                <SelectTrigger className="bg-[#F5F5F5] h-12">
+            <div className="mt-20 flex w-full flex-col gap-6">
+              <Select>
+                <SelectTrigger className="h-12 w-full bg-[#F5F5F5]">
                   <SelectValue placeholder="Account Deletion" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,7 +236,9 @@ export function GeneralSettings() {
               </p>
 
               <div className="flex w-full items-center gap-2">
-                <Button variant="secondary" className="w-full">Cancel</Button>
+                <Button variant="secondary" className="w-full">
+                  Cancel
+                </Button>
                 <Button className="w-full">Deactivate</Button>
               </div>
             </div>
