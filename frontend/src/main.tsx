@@ -12,6 +12,7 @@ import { EventsPage } from "./routes/dashboard/events/page";
 import { DashboardLayout } from "./routes/dashboard/layout";
 import { DashboardPage } from "./routes/dashboard/page";
 import { SettingsPage } from "./routes/dashboard/settings/page";
+import { UserDetailsPage } from "./routes/dashboard/users/[id]/page";
 import { UsersPage } from "./routes/dashboard/users/page";
 import { RootLayout } from "./routes/layout";
 
@@ -30,14 +31,12 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
-          {
-            path: "/animals",
-            element: <AnimalsPage />,
-          },
+          { path: "/animals", element: <AnimalsPage /> },
           { path: "/events", element: <EventsPage /> },
           { path: "/users", element: <UsersPage /> },
           { path: "/settings", element: <SettingsPage /> },
           { path: "/animals/:id", element: <AnimalDetailsPage /> },
+          { path: "/users/:id", element: <UserDetailsPage /> },
         ],
       },
     ],

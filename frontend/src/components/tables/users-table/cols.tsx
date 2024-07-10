@@ -1,8 +1,10 @@
+import { capitalize } from "@/utils";
 import { User } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "../table-commons/col-headers";
+import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Badge } from "../../ui/badge";
+import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -56,7 +58,7 @@ export const columns: ColumnDef<User>[] = [
         </div>
       );
     },
-    accessorFn: (row) => row.role?.name,
+    accessorFn: (row) => capitalize(row.role?.name!),
   },
   {
     id: "lastAction",
@@ -84,7 +86,7 @@ export const columns: ColumnDef<User>[] = [
         </div>
       );
     },
-    accessorFn: (row) => row.updated_at,
+    accessorFn: (row) => new Date(row.updated_at).toLocaleDateString(),
   },
   {
     id: "deptName",
@@ -108,13 +110,13 @@ export const columns: ColumnDef<User>[] = [
         </div>
       );
     },
-    accessorFn: (row) => row.created_at,
+    accessorFn: (row) => new Date(row.created_at).toLocaleDateString(),
   },
   {
     id: "actions",
-    cell: () => (
+    cell: ({ row }) => (
       <Badge variant="secondary" className="font-thin">
-        edit
+        <Link to={`/users/${row.original.id}`}>edit</Link>
       </Badge>
     ),
   },
