@@ -3,7 +3,7 @@ import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { updateRole, updateTier } from "@/api/user";
+import { updateGroup, updateRole, updateTier } from "@/api/user";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRoles } from "@/queries/roles";
+import { useGroups } from "@/queries/user";
 import { capitalize } from "@/utils";
 import { User } from "@/utils/types";
 import { useMutation } from "react-query";
@@ -106,6 +107,47 @@ const TierSelect = (props: { currentTier: number; id: number }) => {
   );
 };
 
+const GroupSelect = (props: { currentGroupId: number; id: number }) => {
+  const { data: groups, isLoading } = useGroups();
+
+  const mutation = useMutation({
+    mutationFn: async (groupId: number | null) => {
+      const res = await updateGroup(props.id, groupId);
+      if (res.status === 200) {
+        toast.success(res.data.message);
+      } else {
+        toast.error(res.data.detail);
+      }
+    },
+  });
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <Select
+      defaultValue={props.currentGroupId?.toString() || "null"}
+      onValueChange={(value) =>
+        mutation.mutate(value === "null" ? null : parseInt(value))
+      }
+      disabled={mutation.isLoading}
+    >
+      <SelectTrigger className="w-[140px]">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="null">None</SelectItem>
+        {groups?.map((group) => (
+          <SelectItem key={group.id} value={group.id.toString()}>
+            {group.title}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
 export const userManagementColumns: ColumnDef<User>[] = [
   {
     accessorKey: "image",
@@ -186,22 +228,15 @@ export const userManagementColumns: ColumnDef<User>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Group" />
     ),
-    cell: () => {
+    cell: ({ row }) => {
       return (
-        <Select>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Group" defaultValue="group-2" />
-          </SelectTrigger>
-          <SelectContent>
-            {["group-1", "group-2", "group-3"].map((group) => (
-              <SelectItem key={group} value={group}>
-                {group.charAt(0).toUpperCase() + group.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <GroupSelect
+          currentGroupId={row.original.group_id!}
+          id={row.original.id}
+        />
       );
     },
+    enableSorting: false,
   },
   {
     accessorKey: "tier",

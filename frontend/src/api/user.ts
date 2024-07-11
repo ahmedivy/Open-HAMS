@@ -5,6 +5,12 @@ import { UpdateProfileSchema } from "./schemas/auth";
 export async function getAuthenticatedUser(): Promise<User> {
   const res = await instance.get("/users/me/");
   console.log(res.data);
+
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  }
+
   return res.data as User;
 }
 
@@ -31,5 +37,12 @@ export async function updateRole(userId: number, role: string) {
 
 export async function updateTier(userId: number, tier: number) {
   const res = await instance.put(`/users/${userId}/tier/`, { tier });
+  return res;
+}
+
+export async function updateGroup(userId: number, groupId: number | null) {
+  const res = await instance.put(
+    `/users/${userId}/group/${groupId ? `?group_id=${groupId}` : ""}`,
+  );
   return res;
 }

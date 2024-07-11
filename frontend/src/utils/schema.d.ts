@@ -127,6 +127,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_id}/group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update User Group */
+        put: operations["update_user_group_users__user_id__group_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/zoo/": {
         parameters: {
             query?: never;
@@ -596,6 +613,8 @@ export interface components {
             name: string;
             /** Zoo Id */
             zoo_id: number;
+            /** Group Id */
+            group_id?: number | null;
             /** Id */
             id: number;
             /**
@@ -615,6 +634,8 @@ export interface components {
             name: string;
             /** Zoo Id */
             zoo_id: number;
+            /** Group Id */
+            group_id?: number | null;
         };
         /** EventWithAnimals */
         EventWithAnimals: {
@@ -1109,6 +1130,39 @@ export interface operations {
                 "application/json": components["schemas"]["TierIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user_group_users__user_id__group_put: {
+        parameters: {
+            query?: {
+                group_id?: number | null;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1733,7 +1787,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventType"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1797,7 +1851,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Group"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

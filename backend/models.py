@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy import Index
 from sqlmodel import Field, Relationship, SQLModel
 
 from core.utils import created_at_field, updated_at_field
@@ -23,7 +24,7 @@ class Role(RolePublic, table=True):
     permissions: list["Permission"] = Relationship(
         back_populates="roles",
         link_model=RolePermission,
-        sa_relationship_kwargs={"lazy": "selectin"},
+        sa_relationship_kwargs={"lazy": "joined"},
     )
 
 
@@ -58,6 +59,32 @@ class Zoo(SQLModel, table=True):
     groups: list["Group"] = Relationship(back_populates="zoo")
 
 
+class GroupIn(SQLModel):
+    title: str
+    zoo_id: int = Field(foreign_key="zoo.id")
+
+
+class GroupPublic(GroupIn):
+    id: int = Field(primary_key=True)
+
+    created_at: datetime = created_at_field()
+    updated_at: datetime = updated_at_field()
+
+
+class Group(GroupPublic, table=True):
+    zoo: Zoo = Relationship(
+        back_populates="groups", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    users: list["User"] = Relationship(back_populates="group")
+    event_types: list["EventType"] = Relationship(back_populates="group")
+
+    __table_args__ = (Index("ix_unique_title_zoo_id", "title", "zoo_id", unique=True),)
+
+
+class GroupWithZoo(GroupPublic):
+    zoo: Zoo | None = None
+
+
 class UserPublic(SQLModel):
     id: int = Field(primary_key=True)
     email: str = Field(unique=True)
@@ -71,18 +98,21 @@ class UserPublic(SQLModel):
 
     role_id: int = Field(foreign_key="role.id")
     zoo_id: int | None = Field(foreign_key="zoo.id")
+    group_id: int | None = Field(foreign_key="group.id", default=None)
 
 
 class User(UserPublic, table=True):
     hashed_password: str
 
     role: Role = Relationship(
-        back_populates="users", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
     )
     zoo: Zoo = Relationship(
-        back_populates="users", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
     )
-    memberships: list["MemberShip"] = Relationship(back_populates="user")
+    group: "Group" = Relationship(
+        back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
+    )
 
     audits: list["AnimalAudit"] = Relationship(back_populates="user")
     comments: list["AnimalComment"] = Relationship(back_populates="user")
@@ -90,8 +120,10 @@ class User(UserPublic, table=True):
     events_link: list["UserEvent"] = Relationship(back_populates="user")
 
 
-class UserWithRole(UserPublic):
+class UserWithDetails(UserPublic):
     role: RoleWithPermissions | None = None
+    group: Group | None = None  # type: ignore
+    zoo: Zoo | None = None
 
 
 class AnimalEvent(SQLModel, table=True):
@@ -174,6 +206,7 @@ class Animal(AnimalIn, table=True):
 class EventTypeIn(SQLModel):
     name: str
     zoo_id: int = Field(foreign_key="zoo.id")
+    group_id: int | None = Field(foreign_key="group.id", default=None)
 
 
 class EventType(EventTypeIn, table=True):
@@ -185,8 +218,14 @@ class EventType(EventTypeIn, table=True):
     updated_at: datetime = updated_at_field()
 
     zoo: Zoo = Relationship(back_populates="event_types")
-
+    group: Group = Relationship(back_populates="event_types")
     events: list["Event"] = Relationship(back_populates="event_type")
+
+    __table_args__ = (
+        Index(
+            "ix_unique_name_zoo_id_group_id", "name", "zoo_id", "group_id", unique=True
+        ),
+    )
 
 
 class EventIn(SQLModel):
@@ -214,40 +253,6 @@ class Event(EventIn, table=True):
     comments: list["AnimalComment"] = Relationship(back_populates="event")
 
     users_link: list["UserEvent"] = Relationship(back_populates="event")
-
-
-class MemberShip(SQLModel, table=True):
-    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
-    group_id: int | None = Field(default=None, foreign_key="group.id", primary_key=True)
-
-    created_at: datetime = created_at_field()
-    updated_at: datetime = updated_at_field()
-
-    group: "Group" = Relationship(back_populates="memberships")
-    user: "User" = Relationship(back_populates="memberships")
-
-
-class GroupIn(SQLModel):
-    title: str
-    zoo_id: int = Field(foreign_key="zoo.id")
-
-
-class GroupPublic(GroupIn):
-    id: int = Field(primary_key=True)
-
-    created_at: datetime = created_at_field()
-    updated_at: datetime = updated_at_field()
-
-
-class Group(GroupPublic, table=True):
-    zoo: Zoo = Relationship(
-        back_populates="groups", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-    memberships: list[MemberShip] = Relationship(back_populates="group")
-
-
-class GroupWithZoo(GroupPublic):
-    zoo: Zoo | None = None
 
 
 class AnimalActitvityLog(SQLModel, table=True):

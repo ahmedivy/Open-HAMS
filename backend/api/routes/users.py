@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import select
@@ -17,7 +17,7 @@ from db.roles import get_role
 from db.users import get_user_by_email, get_user_by_id, get_user_by_username
 from db.utils import has_permission
 from db.zoo import get_main_zoo
-from models import User, UserWithRole
+from models import User, UserWithDetails
 from schemas import RoleIn, TierIn, Token, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -55,9 +55,9 @@ async def login(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/", response_model=list[UserWithRole])
+@router.get("/", response_model=list[UserWithDetails])
 async def get_users(session: SessionDep):
-    users = (await session.exec(select(User))).all()
+    users = (await session.exec(select(User).order_by(User.created_at))).unique() # type: ignore
     return users
 
 
@@ -119,7 +119,7 @@ async def update_user(
 
 
 @router.get("/me")
-async def get_authenticated_user(current_user: CurrentUser) -> UserWithRole:
+async def get_authenticated_user(current_user: CurrentUser) -> UserWithDetails:
     return current_user  # type: ignore
 
 
@@ -129,7 +129,9 @@ async def get_authenticated_user_permissions(current_user: CurrentUser):
 
 
 @router.get("/{user_id}")
-async def get_user(user_id: int, session: SessionDep, _: CurrentUser) -> UserWithRole:
+async def get_user(
+    user_id: int, session: SessionDep, _: CurrentUser
+) -> UserWithDetails:
     user = await get_user_by_id(user_id, session)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -208,3 +210,29 @@ async def update_user_tier(
     user.tier = tierIn.tier
     await session.commit()
     return {"message": f"Tier updated to {tierIn.tier}"}
+
+
+@router.put("/{user_id}/group")
+async def update_user_group(
+    session: SessionDep,
+    current_user: CurrentUser,
+    user_id: int,
+    group_id: int | None = None,
+):
+    if not has_permission(current_user.role.permissions, "manage_users"):
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to update user groups",
+        )
+
+    user = await get_user_by_id(user_id, session)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if group_id is None:
+        user.group_id = None
+    else:
+        user.group_id = group_id
+
+    await session.commit()
+    return JSONResponse({"message": "Group updated"}, status_code=200)

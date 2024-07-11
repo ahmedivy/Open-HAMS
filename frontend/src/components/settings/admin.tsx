@@ -2,14 +2,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { userManagementColumns } from "../tables/user-management/user-management-cols";
 
 import { getUsers } from "@/api/user";
-import { useRoles } from "@/queries/roles";
+import { useEventType } from "@/queries/roles";
 import { Loading } from "@/routes/loading";
 import { User } from "@/utils/types";
 import { useQuery } from "react-query";
-import { NewEventTypeModel } from "../models/new-event-type";
+import { EventTypeModel } from "../models/event-type-model";
+import { NewGroupModel } from "../models/new-group";
+import { eventTypesColumns } from "../tables/event-type/event-type-cols";
+import { EventTypeDataTable } from "../tables/event-type/event-type-data-table";
 import { DataTable } from "../tables/table-commons/data-table";
 import { Button } from "../ui/button";
-import { NewGroupModel } from "../models/new-group";
 
 export function AdminSettings() {
   const { data: users, isLoading } = useQuery<User[]>({
@@ -17,9 +19,11 @@ export function AdminSettings() {
     queryKey: ["users"],
   });
 
-  const { isLoading: rolesLoading } = useRoles();
+  const { data: eventTypes, isLoading: eventTypesLoading } = useEventType();
 
-  if (isLoading || rolesLoading) {
+  // const { isLoading: rolesLoading } = useRoles();
+
+  if (isLoading || eventTypesLoading) {
     return <Loading />;
   }
 
@@ -42,26 +46,27 @@ export function AdminSettings() {
         </TabsList>
         <TabsContent value="user-management">
           <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <div className="flex items-center justify-between gap-2 mb-6">
-            <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
-            <NewGroupModel />
+            <div className="mb-6 flex items-center justify-between gap-2">
+              <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
+              <NewGroupModel />
             </div>
             <DataTable data={users!} columns={userManagementColumns} />
           </div>
         </TabsContent>
         <TabsContent value="eventTypes">
           <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <div className="flex w-full items-center justify-between">
+            <div className="mb-6 flex w-full items-center justify-between">
               <h2 className="mb-4 text-2xl font-semibold">
                 Event Type Management
               </h2>
-              <NewEventTypeModel />
+              <EventTypeModel mode="add">
+                <Button>Add Event Type</Button>
+              </EventTypeModel>
             </div>
-            {/* <DataTable
-              data={eventTypeData}
+            <EventTypeDataTable
+              data={eventTypes!}
               columns={eventTypesColumns}
-              toolbar={"none"}
-            /> */}
+            />
           </div>
         </TabsContent>
       </Tabs>
