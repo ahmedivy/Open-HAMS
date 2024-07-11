@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Badge } from "../../ui/badge";
 import { DataTableColumnHeader } from "../table-commons/col-headers";
 
-export const columns: ColumnDef<User>[] = [
+export const animalTableColumns: ColumnDef<User>[] = [
   {
     accessorKey: "image",
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
