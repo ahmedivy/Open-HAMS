@@ -110,7 +110,11 @@ export function AnimalModel(props: {
                   <FormItem>
                     <FormLabel>Image</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Upload an image" />
+                      <Input
+                        {...field}
+                        type="file"
+                        placeholder="Upload an image"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

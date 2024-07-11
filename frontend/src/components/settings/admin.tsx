@@ -8,6 +8,8 @@ import { User } from "@/utils/types";
 import { useQuery } from "react-query";
 import { NewEventTypeModel } from "../models/new-event-type";
 import { DataTable } from "../tables/table-commons/data-table";
+import { Button } from "../ui/button";
+import { NewGroupModel } from "../models/new-group";
 
 export function AdminSettings() {
   const { data: users, isLoading } = useQuery<User[]>({
@@ -37,16 +39,13 @@ export function AdminSettings() {
           >
             Event Types
           </TabsTrigger>
-          <TabsTrigger
-            value="groups"
-            className="px-4 data-[state=active]:border-2  data-[state=active]:border-primary data-[state=active]:bg-inherit data-[state=active]:shadow-none"
-          >
-            Groups
-          </TabsTrigger>
         </TabsList>
         <TabsContent value="user-management">
           <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
+            <div className="flex items-center justify-between gap-2 mb-6">
             <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
+            <NewGroupModel />
+            </div>
             <DataTable data={users!} columns={userManagementColumns} />
           </div>
         </TabsContent>

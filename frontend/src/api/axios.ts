@@ -9,7 +9,7 @@ const instance = axios.create({
   },
   timeoutErrorMessage: "Request timed out",
   validateStatus(code) {
-    return code >= 200 && code < 300;
+    return true;
   },
 });
 

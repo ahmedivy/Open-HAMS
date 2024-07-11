@@ -11,7 +11,7 @@ export const animalSchema = z.object({
     .string()
     .min(2, "Description must be between 2 and 500 characters")
     .max(500),
-  image: z.string().url("Invalid image URL"),
+  image: z.string().optional(),
   handling_enabled: z.boolean(),
   max_daily_checkout_hours: z.number().int().positive(),
   max_daily_checkouts: z.number().int().positive(),

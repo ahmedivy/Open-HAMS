@@ -10,7 +10,7 @@ export function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <Outlet />
-        <Toaster />
+        <Toaster />w
       </ThemeProvider>
     </QueryClientProvider>
   );
