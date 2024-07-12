@@ -1,7 +1,8 @@
+from fastapi import APIRouter, HTTPException
+
 from api.deps import CurrentUser, SessionDep
 from db.animals import get_all_animals, get_animal_by_id
 from db.utils import has_permission
-from fastapi import APIRouter, HTTPException
 from models import Animal, AnimalIn, Event
 
 router = APIRouter(prefix="/animals", tags=["Animals"])
@@ -52,4 +53,12 @@ async def update_animal(
 
     await session.commit()
     await session.refresh(animal)
+    return animal
+
+
+@router.get("/{animal_id}/")
+async def get_animal(animal_id: int, session: SessionDep) -> Animal:
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
     return animal

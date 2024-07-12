@@ -1,26 +1,38 @@
-import { capitalize } from "@/utils";
-import { User } from "@/utils/types";
+import { Animal } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Badge } from "../../ui/badge";
 import { DataTableColumnHeader } from "../table-commons/col-headers";
 
-export const animalTableColumns: ColumnDef<User>[] = [
+export const animalTableColumns: ColumnDef<Animal>[] = [
   {
     accessorKey: "image",
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
     cell: ({ row }) => (
       <Avatar className="m-2">
         <AvatarImage src="/placeholder-avatar.png" alt={row.getValue("name")} />
-        <AvatarFallback>{row.original.first_name[0]}</AvatarFallback>
+        <AvatarFallback>{row.original.name[0]}</AvatarFallback>
       </Avatar>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    id: "name",
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center">
+          <span>{row.getValue("id")}</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
@@ -31,77 +43,85 @@ export const animalTableColumns: ColumnDef<User>[] = [
         </div>
       );
     },
-    accessorFn: (row) => `${row.first_name} ${row.last_name}`,
   },
   {
-    accessorKey: "email",
+    accessorKey: "species",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Email" />
+      <DataTableColumnHeader column={column} title="Species" />
     ),
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("email")}</span>
+          <span>{row.getValue("species")}</span>
         </div>
       );
     },
   },
   {
-    id: "role",
+    accessorKey: "kind",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Role" />
+      <DataTableColumnHeader column={column} title="Kind" />
     ),
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("role")}</span>
+          <span>{row.getValue("kind")}</span>
         </div>
       );
     },
-    accessorFn: (row) => capitalize(row.role?.name!),
   },
   {
-    id: "lastAction",
+    accessorKey: "max_daily_checkout_hours",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Action" />
+      <DataTableColumnHeader column={column} title="Max Daily Checkout Hours" />
     ),
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("lastAction")}</span>
+          <span>{row.getValue("max_daily_checkout_hours")}</span>
         </div>
       );
     },
-    accessorFn: (row) => "N/A",
   },
   {
-    id: "actionDate",
+    accessorKey: "max_daily_checkouts",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Action Date" />
+      <DataTableColumnHeader column={column} title="Max Daily Checkouts" />
     ),
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("actionDate")}</span>
+          <span>{row.getValue("max_daily_checkouts")}</span>
         </div>
       );
     },
-    accessorFn: (row) => new Date(row.updated_at).toLocaleDateString(),
   },
   {
-    id: "deptName",
+    accessorKey: "rest_time",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Department Name" />
+      <DataTableColumnHeader column={column} title="Rest Time" />
     ),
     cell: ({ row }) => {
-      return <p>{row.getValue("deptName")}</p>;
+      return (
+        <div className="flex items-center">
+          <span>{row.getValue("rest_time")}</span>
+        </div>
+      );
     },
-    accessorFn: (row) => "Hoggle Zoo",
+  },
+  {
+    accessorKey: "tier",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tier" />
+    ),
+    cell: ({ row }) => {
+      return <p>{row.getValue("tier")}</p>;
+    },
   },
   {
     id: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Account Created At" />
+      <DataTableColumnHeader column={column} title="Date" />
     ),
     cell: ({ row }) => {
       return (
@@ -116,7 +136,7 @@ export const animalTableColumns: ColumnDef<User>[] = [
     id: "actions",
     cell: ({ row }) => (
       <Badge variant="secondary" className="font-thin">
-        <Link to={`/users/${row.original.id}`}>edit</Link>
+        <Link to={`/animals/${row.getValue("id")}`}>view</Link>
       </Badge>
     ),
   },

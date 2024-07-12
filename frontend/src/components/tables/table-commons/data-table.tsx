@@ -23,17 +23,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { DataTablePagination } from "./pagination";
 import { DataTableToolbar } from "../user-management/user-management-toolbar";
+import { DataTablePagination } from "./pagination";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  Toolbar?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  Toolbar,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -67,7 +69,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} />
+      {
+        // @ts-ignore
+        Toolbar ? <Toolbar table={table} /> : <DataTableToolbar table={table} />
+      }
+
       <div className="rounded-md">
         <Table>
           <TableHeader>

@@ -8,9 +8,10 @@ import {
 
 import { animalSchema, AnimalSchema } from "@/api/schemas/animal";
 import { tiers } from "@/api/utils";
+import { useAnimal, useZoos } from "@/queries/zoo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Spinner } from "../icons";
+import { LoadingDots, Spinner } from "../icons";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -35,11 +36,35 @@ import { Textarea } from "../ui/textarea";
 export function AnimalModel(props: {
   mode: "add" | "edit";
   children: React.ReactNode;
+  animalId?: string;
 }) {
+  const { data: zoos, isLoading } = useZoos();
+  const { data: animal, isLoading: isAnimalLoading } = useAnimal(
+    props.animalId!,
+  );
   const form = useForm<AnimalSchema>({
     resolver: zodResolver(animalSchema),
-    defaultValues: {},
+    defaultValues:
+      props.mode === "edit"
+        ? {
+            kind: animal?.kind!,
+            name: animal?.name!,
+            species: animal?.species!,
+            image: animal?.image!,
+            max_daily_checkouts: animal?.max_daily_checkouts!,
+            max_daily_checkout_hours: animal?.max_daily_checkout_hours!,
+            rest_time: animal?.rest_time!,
+            description: animal?.description!,
+            tier: animal?.tier!,
+            handling_enabled: animal?.handling_enabled!,
+            zoo_id: animal?.zoo_id?.toString(),
+          }
+        : {},
   });
+
+  if (props.mode === "edit" && !props.animalId) return null;
+
+  if (isLoading || isAnimalLoading) return <LoadingDots />;
 
   async function onSubmit(values: AnimalSchema) {
     console.log(values);
@@ -112,8 +137,8 @@ export function AnimalModel(props: {
                     <FormControl>
                       <Input
                         {...field}
-                        type="file"
-                        placeholder="Upload an image"
+                        // type="file"
+                        placeholder="Enter image url"
                       />
                     </FormControl>
                     <FormMessage />
@@ -227,6 +252,33 @@ export function AnimalModel(props: {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="zoo_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zoo</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value as any as string}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Select Zoo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {zoos?.map((zoo) => (
+                          <SelectItem key={zoo.id} value={zoo.id.toString()}>
+                            {zoo.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

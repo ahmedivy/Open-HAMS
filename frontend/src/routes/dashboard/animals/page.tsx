@@ -2,25 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
-import { Sidebar } from "@/components/sidebar";
+import { getAnimals } from "@/api/animals";
 import { AnimalModel } from "@/components/models/animal-model";
-
-// function getDummyData() {
-//   return Array.from({ length: 5 }).map((_, index) => ({
-//     image: "/placeholder-avatar.png",
-//     name: `Cat ${index + 1}`,
-//     breed: "Domestic Short Hair",
-//     age: 4,
-//     species: "Cat",
-//     status: "Checked In",
-//     lastAction: "Checked In",
-//     lastCompletedBy: "John Doe",
-//     date: "2021-09-01",
-//   }));
-// }
+import { Sidebar } from "@/components/sidebar";
+import { animalTableColumns } from "@/components/tables/animals-table/cols";
+import { AnimalTableToolbar } from "@/components/tables/animals-table/toolbar";
+import { DataTable } from "@/components/tables/table-commons/data-table";
+import { Loading } from "@/routes/loading";
+import { useQuery } from "react-query";
 
 export function AnimalsPage() {
-  // const data = getDummyData();
+  const { data: animals, isLoading } = useQuery({
+    queryKey: ["animals"],
+    queryFn: getAnimals,
+  });
+
+  if (isLoading) return <Loading />;
 
   return (
     <>
@@ -46,7 +43,8 @@ export function AnimalsPage() {
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Animals</h2>
-        {/* <DataTable data={data} columns={columns} /> */}
+        {/* @ts-ignore */}
+        <DataTable data={animals!} columns={animalTableColumns} Toolbar={AnimalTableToolbar} />
       </div>
     </>
   );
