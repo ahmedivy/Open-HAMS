@@ -1,19 +1,24 @@
-
 import { Label } from "@/components/ui/label";
 import * as React from "react";
 import { TimePeriodSelect } from "./period-select";
 import { TimePickerInput } from "./time-picker-input";
+import { Period } from "./time-picker-utils";
 
-export function TimePicker12({ date, setDate }) {
-  const [period, setPeriod] = React.useState("PM");
+interface TimePickerDemoProps {
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
+}
 
-  const minuteRef = React.useRef(null);
-  const hourRef = React.useRef(null);
-  const secondRef = React.useRef(null);
-  const periodRef = React.useRef(null);
+export function TimePicker({ date, setDate }: TimePickerDemoProps) {
+  const [period, setPeriod] = React.useState<Period>("PM");
+
+  const minuteRef = React.useRef<HTMLInputElement>(null);
+  const hourRef = React.useRef<HTMLInputElement>(null);
+  const secondRef = React.useRef<HTMLInputElement>(null);
+  const periodRef = React.useRef<HTMLButtonElement>(null);
 
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-center gap-2">
       <div className="grid gap-1 text-center">
         <Label htmlFor="hours" className="text-xs">
           Hours

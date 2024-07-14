@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateRangePicker } from "../dashboard/data-range-picker";
+import { DatePickerWithRange } from "../dashboard/data-range-picker";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 
@@ -29,7 +29,7 @@ export function ReportsSettings() {
 
           <div className="flex flex-col gap-2">
             <Label>Select Date Range</Label>
-            <DateRangePicker className="w-full" />
+            <DatePickerWithRange className="w-full" />
           </div>
 
           <Button className="w-full">Generate Report</Button>

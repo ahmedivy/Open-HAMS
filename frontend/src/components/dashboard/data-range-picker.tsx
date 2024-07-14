@@ -1,18 +1,29 @@
-import { CalendarIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
+import { DateRange } from "react-day-picker";
 
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/utils";
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
-export function DateRangePicker({ className }) {
-  const [date, setDate] = React.useState({
-    // from: new Date(2023, 0, 20),
-    // to: addDays(new Date(2023, 0, 20), 20),
-  });
+interface DatePicketWithRangeProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+  date?: DateRange;
+  setDate: (date: DateRange | undefined) => void;
+}
 
+export function DatePickerWithRange({
+  className,
+  date,
+  setDate,
+}: DatePicketWithRangeProps) {
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -21,10 +32,11 @@ export function DateRangePicker({ className }) {
             id="date"
             variant={"outline"}
             className={cn(
-              "justify-between text-left font-normal",
+              "w-[300px] justify-start text-left font-normal",
               !date && "text-muted-foreground",
             )}
           >
+            <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (
               date.to ? (
                 <>
@@ -35,12 +47,11 @@ export function DateRangePicker({ className }) {
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>From - To</span>
+              <span>Pick a date</span>
             )}
-            <CalendarIcon className="ml-2 h-4 w-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"

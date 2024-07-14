@@ -2,9 +2,28 @@ import { Input } from "@/components/ui/input";
 
 import { cn } from "@/utils";
 import React from "react";
-import { getArrowByType, getDateByType, setDateByType } from "./utils";
+import {
+  Period,
+  TimePickerType,
+  getArrowByType,
+  getDateByType,
+  setDateByType,
+} from "./time-picker-utils";
 
-const TimePickerInput = React.forwardRef(
+export interface TimePickerInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  picker: TimePickerType;
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
+  period?: Period;
+  onRightFocus?: () => void;
+  onLeftFocus?: () => void;
+}
+
+const TimePickerInput = React.forwardRef<
+  HTMLInputElement,
+  TimePickerInputProps
+>(
   (
     {
       className,
@@ -24,8 +43,8 @@ const TimePickerInput = React.forwardRef(
     },
     ref,
   ) => {
-    const [flag, setFlag] = React.useState(false);
-    const [prevIntKey, setPrevIntKey] = React.useState("0");
+    const [flag, setFlag] = React.useState<boolean>(false);
+    const [prevIntKey, setPrevIntKey] = React.useState<string>("0");
 
     /**
      * allow the user to enter the second digit within 2 seconds
@@ -45,7 +64,7 @@ const TimePickerInput = React.forwardRef(
       return getDateByType(date, picker);
     }, [date, picker]);
 
-    const calculateNewValue = (key) => {
+    const calculateNewValue = (key: string) => {
       /*
        * If picker is '12hours' and the first digit is 0, then the second digit is automatically set to 1.
        * The second entered digit will break the condition and the value will be set to 10-12.
@@ -58,7 +77,7 @@ const TimePickerInput = React.forwardRef(
       return !flag ? "0" + key : calculatedValue.slice(1, 2) + key;
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Tab") return;
       e.preventDefault();
       if (e.key === "ArrowRight") onRightFocus?.();

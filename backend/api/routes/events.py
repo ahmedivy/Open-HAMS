@@ -1,19 +1,25 @@
 from datetime import UTC, datetime
 
+from fastapi import APIRouter, Body, HTTPException
+from fastapi.responses import JSONResponse
+from sqlmodel import and_, col, select
+
 from api.deps import CurrentUser, SessionDep
 from db.animals import log_activity, log_audit
 from db.events import get_all_events
 from db.utils import has_permission
-from fastapi import APIRouter, Body, HTTPException
 from models import (
     Animal,
     AnimalActitvityLog,
     AnimalEvent,
     Event,
+    EventCreate,
     EventIn,
+    EventType,
     EventWithAnimals,
+    User,
+    UserEvent,
 )
-from sqlmodel import col, select
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -25,18 +31,69 @@ async def read_all_events(session: SessionDep) -> list[Event]:
 
 @router.post("/")
 async def create_event(
-    event: EventIn, session: SessionDep, current_user: CurrentUser
-) -> Event:
+    body: EventCreate, session: SessionDep, current_user: CurrentUser
+):
     if not has_permission(current_user.role.permissions, "manage_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
 
-    event = Event(**event.model_dump())
-    session.add(event)
-    await session.commit()
-    await session.refresh(event)
-    return event
+    # validate event type
+    event_type = await session.exec(
+        select(EventType).where(
+            and_(
+                EventType.id == body.event.event_type_id,
+                EventType.zoo_id == body.event.zoo_id,
+            )
+        )
+    )
+
+    if not event_type.first():
+        raise HTTPException(status_code=404, detail="Event type not found for this zoo")
+
+
+    # validate users
+    users = await session.exec(select(User).where(col(User.id).in_(body.user_ids)))
+    users = users.all()
+
+    if len(users) != len(body.user_ids):
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # validate animals
+    animals = await session.exec(select(Animal).where(col(Animal.id).in_(body.animal_ids)))
+    animals = animals.all()
+    if len(animals) != len(body.animal_ids):
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    try:
+        async with session.begin():
+            event = Event(**body.event.model_dump())
+            session.add(event)
+
+            await session.commit()
+            await session.refresh(event)
+
+            for user in users:
+                user_link = UserEvent(user_id=user.id, event_id=event.id)
+                session.add(user_link)
+
+            for animal in animals:
+                animal_link = AnimalEvent(animal_id=animal.id, event_id=event.id) # type: ignore
+                session.add(animal_link)
+
+            pass
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    else:
+        await session.commit()
+        return JSONResponse({"message": "Event created"}, status_code=200)
+
+    # event = Event(**body.event.model_dump())
+    # session.add(event)
+    # await session.commit()
+    # await session.refresh(event)
+    # return event
 
 
 @router.get("/{event_id}")
@@ -158,18 +215,18 @@ async def remove_animals_from_event(
     return event
 
 
-@router.get("/{event_id}/animals")
-async def get_event_animals(event_id: int, session: SessionDep) -> EventWithAnimals:
-    event = await session.get(Event, event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
+# @router.get("/{event_id}/animals")
+# async def get_event_animals(event_id: int, session: SessionDep) -> EventWithAnimals:
+#     event = await session.get(Event, event_id)
+#     if not event:
+#         raise HTTPException(status_code=404, detail="Event not found")
 
-    animals = await session.exec(
-        select(Animal).join(AnimalEvent).where(AnimalEvent.event_id == event_id)
-    )
-    animals = animals.all()
+#     animals = await session.exec(
+#         select(Animal).join(AnimalEvent).where(AnimalEvent.event_id == event_id)
+#     )
+#     animals = animals.all()
 
-    return EventWithAnimals(event=event, animals=animals)
+#     return EventWithAnimals(event=event, animals=animals)
 
 
 @router.post("/{event_id}/animal/{animal_id}/check-in")

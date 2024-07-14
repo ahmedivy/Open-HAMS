@@ -8,6 +8,6 @@ export async function getAnimals() {
 
 export async function getAnimal(animalId: string) {
   const res = await instance.get(`/animals/${animalId}`);
-  console.log(res.data);
+  if (res.status !== 200) throw new Error(res.data);
   return res.data as Animal;
 }

@@ -14,11 +14,13 @@ import { DashboardPage } from "./routes/dashboard/page";
 import { SettingsPage } from "./routes/dashboard/settings/page";
 import { UserDetailsPage } from "./routes/dashboard/users/[id]/page";
 import { UsersPage } from "./routes/dashboard/users/page";
+import { Error } from "./routes/error";
 import { RootLayout } from "./routes/layout";
 
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <Error />,
     children: [
       {
         element: <AuthLayout />,

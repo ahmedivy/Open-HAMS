@@ -32,3 +32,4 @@ class ZooIn(BaseModel):
     name: str
     location: str
     information: str | None
+

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from api.deps import CurrentUser, SessionDep
 from db.animals import get_all_animals, get_animal_by_id
 from db.utils import has_permission
-from models import Animal, AnimalIn, Event
+from models import Animal, AnimalIn
 
 router = APIRouter(prefix="/animals", tags=["Animals"])
 
@@ -13,6 +13,14 @@ async def read_all_animals(
     session: SessionDep, zoo_id: int | None = None
 ) -> list[Animal]:
     return await get_all_animals(zoo_id, session)
+
+
+@router.get("/{animal_id}")
+async def get_animal(animal_id: int, session: SessionDep) -> Animal:
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+    return animal
 
 
 @router.post("/")
@@ -30,6 +38,21 @@ async def create_animal(
     await session.commit()
     await session.refresh(animal)
     return animal
+
+
+@router.delete("/{animal_id}")
+async def delete_animal(animal_id: int, session: SessionDep, current_user: CurrentUser):
+    if not has_permission(current_user.role.permissions, "manage_animals"):
+        raise HTTPException(
+            status_code=401, detail="You are not authorized to perform this action"
+        )
+
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    await session.delete(animal)
+    return {"message": "Animal deleted"}
 
 
 @router.put("/{animal_id}")
@@ -53,12 +76,4 @@ async def update_animal(
 
     await session.commit()
     await session.refresh(animal)
-    return animal
-
-
-@router.get("/{animal_id}/")
-async def get_animal(animal_id: int, session: SessionDep) -> Animal:
-    animal = await get_animal_by_id(animal_id, session)
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
     return animal

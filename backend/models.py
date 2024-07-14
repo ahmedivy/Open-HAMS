@@ -115,7 +115,7 @@ class User(UserPublic, table=True):
     )
 
     audits: list["AnimalAudit"] = Relationship(back_populates="user")
-    comments: list["AnimalComment"] = Relationship(back_populates="user")
+    comments: list["EventComment"] = Relationship(back_populates="user")
 
     events_link: list["UserEvent"] = Relationship(back_populates="user")
 
@@ -151,7 +151,6 @@ class AnimalEvent(SQLModel, table=True):
 
 class AnimalIn(SQLModel):
     name: str
-    kind: str
     species: str
     image: str | None = Field(default=None)
     max_daily_checkouts: int
@@ -165,6 +164,7 @@ class AnimalIn(SQLModel):
     last_checkin_time: datetime | None = Field(default=None)
     checked_in: bool = Field(default=True)
     handling_enabled: bool
+    status: str | None = Field(default="checked_in")
 
     zoo_id: int = Field(foreign_key="zoo.id")
 
@@ -173,7 +173,6 @@ class AnimalIn(SQLModel):
             "examples": [
                 {
                     "name": "Lion",
-                    "kind": "Mammal",
                     "species": "Panthera leo",
                     "image": "https://example.com/lion.jpg",
                     "max_daily_checkouts": 10,
@@ -200,7 +199,6 @@ class Animal(AnimalIn, table=True):
     activity_logs: list["AnimalActitvityLog"] = Relationship(back_populates="animal")
     audits: list["AnimalAudit"] = Relationship(back_populates="animal")
     health_logs: list["AnimalHealthLog"] = Relationship(back_populates="animal")
-    comments: list["AnimalComment"] = Relationship(back_populates="animal")
 
 
 class EventTypeIn(SQLModel):
@@ -229,7 +227,6 @@ class EventType(EventTypeIn, table=True):
 
 
 class EventIn(SQLModel):
-    event_type_id: int
     name: str
     description: str
     start_at: datetime
@@ -245,13 +242,12 @@ class Event(EventIn, table=True):
     updated_at: datetime = updated_at_field()
 
     event_type: EventType = Relationship(
-        back_populates="events", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="events", sa_relationship_kwargs={"lazy": "joined"}
     )
 
     zoo: Zoo = Relationship(back_populates="events")
     animals_link: list[AnimalEvent] = Relationship(back_populates="event")
-    comments: list["AnimalComment"] = Relationship(back_populates="event")
-
+    comments: list["EventComment"] = Relationship(back_populates="event")
     users_link: list["UserEvent"] = Relationship(back_populates="event")
 
 
@@ -293,22 +289,20 @@ class AnimalHealthLog(SQLModel, table=True):
     animal: Animal = Relationship(back_populates="health_logs")
 
 
-class AnimalCommentIn(SQLModel):
+class EventCommentIn(SQLModel):
     comment: str
 
 
-class AnimalComment(AnimalCommentIn, table=True):
-    __table_name__ = "animal_comment"  # type: ignore
+class EventComment(EventCommentIn, table=True):
+    __table_name__ = "event_comment"  # type: ignore
 
     id: int = Field(primary_key=True)
-    animal_id: int = Field(foreign_key="animal.id")
     user_id: int = Field(foreign_key="user.id")
     event_id: int | None = Field(foreign_key="event.id", default=None)
 
     created_at: datetime = created_at_field()
     updated_at: datetime = updated_at_field()
 
-    animal: Animal = Relationship(back_populates="comments")
     user: User = Relationship(back_populates="comments")
     event: Event = Relationship(back_populates="comments")
 
@@ -333,3 +327,10 @@ class EventWithAnimals(SQLModel):
 class GroupWithMembers(SQLModel):
     group: GroupWithZoo
     members: list[UserPublic]
+
+
+class EventCreate(SQLModel):
+    event: EventIn
+    animal_ids: list[int]
+    user_ids: list[int]
+    checkout_immediately: bool = False

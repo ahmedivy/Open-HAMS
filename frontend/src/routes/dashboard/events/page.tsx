@@ -2,27 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
-import { columns } from "@/components/events-table/cols";
-import { DataTable } from "@/components/events-table/data-table";
 import { NewEventModel } from "@/components/events/new-event-model";
 import { Sidebar } from "@/components/sidebar";
 
-function getDummyData() {
-  return Array.from({ length: 5 }).map(() => ({
-    image: "/placeholder-avatar.png",
-    name: `Max`,
-    description: `This is a description for Event`,
-    eventDate: `2021-09-01`,
-    location: "New York",
-    assignedAnimals: 5,
-    status: "Planned",
-    lastEditedBy: "John Doe",
-    date: "2021-09-01",
-  }));
-}
 
 export function EventsPage() {
-  const data = getDummyData();
 
   return (
     <>
@@ -41,7 +25,7 @@ export function EventsPage() {
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Events</h2>
-        <DataTable data={data} columns={columns} />
+        {/* <DataTable data={data} columns={columns} /> */}
       </div>
     </>
   );
