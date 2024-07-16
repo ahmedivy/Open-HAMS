@@ -1,9 +1,13 @@
+from datetime import date, datetime, timedelta, timezone
+
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import func
+from sqlmodel import and_, col, desc, or_, select
 
 from api.deps import CurrentUser, SessionDep
 from db.animals import get_all_animals, get_animal_by_id
 from db.utils import has_permission
-from models import Animal, AnimalIn
+from models import Animal, AnimalEvent, AnimalIn
 
 router = APIRouter(prefix="/animals", tags=["Animals"])
 
@@ -13,6 +17,33 @@ async def read_all_animals(
     session: SessionDep, zoo_id: int | None = None
 ) -> list[Animal]:
     return await get_all_animals(zoo_id, session)
+
+
+@router.get("/status")
+async def get_animal_status(session: SessionDep):
+    # get daily event checkout
+    query = (
+        select(
+            Animal,
+            func.count(col(AnimalEvent.id)).label("event_count"),
+        )
+        .join(AnimalEvent, isouter=True)
+        .where(
+            or_(
+                col(AnimalEvent.checked_in).is_(None),
+                func.date(AnimalEvent.checked_in) == date.today(),
+            )
+        )
+        .group_by(col(Animal.id))
+    )
+    animals = (await session.exec(query)).all()
+
+    ...
+
+    return [
+        {"animal": animal, "event_count": event_count}
+        for animal, event_count in animals
+    ]
 
 
 @router.get("/{animal_id}")

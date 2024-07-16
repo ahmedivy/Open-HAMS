@@ -5,6 +5,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { AutoComplete } from "antd";
+
 import { Button } from "@/components/ui/button";
 
 import { Plus } from "lucide-react";
@@ -19,7 +21,7 @@ import { TimePicker } from "../ui/time-picker/time-picker-12h";
 
 import { EventSchema, eventSchema } from "@/api/schemas/event";
 import { useEventType } from "@/queries/roles";
-import { useZoos } from "@/queries/zoo";
+import { useAnimal, useZoos } from "@/queries/zoo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -37,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useQuery } from "react-query";
 
 export function NewEventModel() {
   const [date, setDate] = useState(new Date());
@@ -142,15 +145,7 @@ export function NewEventModel() {
             </div>
             <div className="flex flex-col gap-4">
               <div className="grid w-72 gap-4 rounded-lg bg-[#E5EEF5] p-4">
-                <div className="grid gap-2">
-                  <Label className="text-sm">Handler</Label>
-                  <div className="flex items-center gap-2">
-                    <Plus className="size-5" />
-                    <Avatar className="size-6">
-                      <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
-                    </Avatar>
-                  </div>
-                </div>
+                <HandlerSelect />
                 <div className="grid gap-2">
                   <Label className="text-sm">Animals</Label>
                   <div className="flex items-center gap-2">
@@ -236,5 +231,57 @@ export function NewEventModel() {
         </Form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function HandlerSelect() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedHandlers, setSelectedHandlers] = useState<string[]>([]);
+  const [value, setValue] = useState("");
+
+  const {data: animals, isLoading} = useQuery({
+    queryKey: ["animals", "statuses"]
+  })
+
+  const options = [
+    { value: "control mode", label: "Control Mode" },
+    { value: "manual mode", label: "Manual Mode" },
+    { value: "auto mode", label: "Auto Mode" },
+  ];
+
+  const onSelect = (value: string) => {
+    setSelectedHandlers([...selectedHandlers, value]);
+    setValue("");
+  };
+
+  return (
+    <div className="grid gap-2">
+      <Label className="text-sm">Handler</Label>
+      <div className="flex items-center gap-2">
+        {isOpen ? (
+          <>
+            <AutoComplete
+              value={value}
+              options={options}
+              style={{ width: 200 }}
+              onSelect={onSelect}
+              onSearch={() => {}}
+              onChange={(value) => setValue(value)}
+              placeholder="control mode"
+            />
+          </>
+        ) : (
+          <>
+            <Plus
+              className="size-5 cursor-pointer"
+              onClick={() => setIsOpen(true)}
+            />
+            <Avatar className="size-6">
+              <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
+            </Avatar>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

@@ -10,13 +10,11 @@ from db.events import get_all_events
 from db.utils import has_permission
 from models import (
     Animal,
-    AnimalActitvityLog,
     AnimalEvent,
     Event,
     EventCreate,
     EventIn,
     EventType,
-    EventWithAnimals,
     User,
     UserEvent,
 )
@@ -40,60 +38,82 @@ async def create_event(
 
     # validate event type
     event_type = await session.exec(
-        select(EventType).where(
+        select(EventType.id).where(
             and_(
                 EventType.id == body.event.event_type_id,
                 EventType.zoo_id == body.event.zoo_id,
             )
         )
     )
-
     if not event_type.first():
         raise HTTPException(status_code=404, detail="Event type not found for this zoo")
 
-
     # validate users
     users = await session.exec(select(User).where(col(User.id).in_(body.user_ids)))
-    users = users.all()
-
+    users = list(users.unique())
     if len(users) != len(body.user_ids):
         raise HTTPException(status_code=404, detail="User not found")
-    
+
+    print(users)
+
     # validate animals
-    animals = await session.exec(select(Animal).where(col(Animal.id).in_(body.animal_ids)))
+    animals = await session.exec(
+        select(Animal).where(
+            and_(
+                col(Animal.id).in_(body.animal_ids), Animal.zoo_id == body.event.zoo_id
+            )
+        )
+    )
     animals = animals.all()
     if len(animals) != len(body.animal_ids):
         raise HTTPException(status_code=404, detail="Animal not found")
 
-    try:
-        async with session.begin():
-            event = Event(**body.event.model_dump())
-            session.add(event)
+    # check if animals are already assigned to an event during this time
+    clashing_animals = await session.exec(
+        select(Animal.name)
+        .join(AnimalEvent)
+        .join(Event)
+        .where(
+            and_(
+                Event.start_at <= body.event.end_at,
+                Event.end_at >= body.event.start_at,
+                Event.zoo_id == body.event.zoo_id,
+                col(Animal.id).in_(body.animal_ids),
+            )
+        )
+        .group_by(Animal.name)
+    )
+    if clashing_animals.all():
+        raise HTTPException(
+            status_code=400,
+            detail="Some animals are already assigned to an event during this time",
+        )
 
-            await session.commit()
-            await session.refresh(event)
+    # if body.checkout_immediately:
+    #     ...
 
-            for user in users:
-                user_link = UserEvent(user_id=user.id, event_id=event.id)
-                session.add(user_link)
+    event = Event(**body.event.model_dump())
+    session.add(event)
 
-            for animal in animals:
-                animal_link = AnimalEvent(animal_id=animal.id, event_id=event.id) # type: ignore
-                session.add(animal_link)
+    current_user_id = current_user.id
 
-            pass
-    except Exception as e:
-        await session.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    else:
-        await session.commit()
-        return JSONResponse({"message": "Event created"}, status_code=200)
+    await session.commit()
+    await session.refresh(event)
 
-    # event = Event(**body.event.model_dump())
-    # session.add(event)
-    # await session.commit()
-    # await session.refresh(event)
-    # return event
+    for id in body.user_ids:
+        user_link = UserEvent(
+            user_id=id, event_id=event.id, assigner_id=current_user_id
+        )  # type: ignore
+        session.add(user_link)
+
+    for id in body.animal_ids:
+        animal_link = AnimalEvent(animal_id=id, event_id=event.id)  # type: ignore
+        session.add(animal_link)
+
+    await session.commit()
+    await session.refresh(event)
+    
+    return event
 
 
 @router.get("/{event_id}")

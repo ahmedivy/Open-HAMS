@@ -1,8 +1,8 @@
-"""postgres migration
+"""update audit and health logs
 
-Revision ID: fced90120a96
+Revision ID: 93f42c88e525
 Revises: 
-Create Date: 2024-05-31 20:45:28.097815
+Create Date: 2024-07-16 22:14:50.835107
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'fced90120a96'
+revision: str = '93f42c88e525'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -39,13 +39,12 @@ def upgrade() -> None:
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('location', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('information', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('animal',
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('kind', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('species', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('image', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('max_daily_checkouts', sa.Integer(), nullable=False),
@@ -58,19 +57,11 @@ def upgrade() -> None:
     sa.Column('last_checkin_time', sa.DateTime(), nullable=True),
     sa.Column('checked_in', sa.Boolean(), nullable=False),
     sa.Column('handling_enabled', sa.Boolean(), nullable=False),
+    sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('zoo_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('event_type',
-    sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('zoo_id', sa.Integer(), nullable=False),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -78,34 +69,18 @@ def upgrade() -> None:
     sa.Column('title', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('zoo_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index('ix_unique_title_zoo_id', 'group', ['title', 'zoo_id'], unique=True)
     op.create_table('rolepermission',
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.Column('permission_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['permission_id'], ['permission.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['role.id'], ),
     sa.PrimaryKeyConstraint('role_id', 'permission_id')
-    )
-    op.create_table('user',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('email', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('first_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('last_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('username', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('tier', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('role_id', sa.Integer(), nullable=False),
-    sa.Column('zoo_id', sa.Integer(), nullable=True),
-    sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.ForeignKeyConstraint(['role_id'], ['role.id'], ),
-    sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
     )
     op.create_table('animal_activity_log',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -115,12 +90,45 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('event_type',
+    sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('zoo_id', sa.Integer(), nullable=False),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
+    sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_unique_name_zoo_id_group_id', 'event_type', ['name', 'zoo_id', 'group_id'], unique=True)
+    op.create_table('user',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('email', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('first_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('last_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('username', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('tier', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('role_id', sa.Integer(), nullable=False),
+    sa.Column('zoo_id', sa.Integer(), nullable=True),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
+    sa.ForeignKeyConstraint(['role_id'], ['role.id'], ),
+    sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
+    )
     op.create_table('animal_audit',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('animal_id', sa.Integer(), nullable=False),
     sa.Column('changed_field', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('old_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('new_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('action', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('changed_at', sa.DateTime(), nullable=False),
     sa.Column('changed_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
@@ -132,88 +140,82 @@ def upgrade() -> None:
     sa.Column('animal_id', sa.Integer(), nullable=False),
     sa.Column('details', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('logged_at', sa.DateTime(), nullable=False),
+    sa.Column('logged_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
+    sa.ForeignKeyConstraint(['logged_by'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('event',
-    sa.Column('event_type_id', sa.Integer(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('start_at', sa.DateTime(), nullable=False),
-    sa.Column('end_at', sa.DateTime(), nullable=False),
+    sa.Column('start_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('end_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('event_type_id', sa.Integer(), nullable=False),
     sa.Column('zoo_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['event_type_id'], ['event_type.id'], ),
     sa.ForeignKeyConstraint(['zoo_id'], ['zoo.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('membership',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('group_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'group_id')
-    )
     op.create_table('animal_event',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('animal_id', sa.Integer(), nullable=True),
-    sa.Column('event_id', sa.Integer(), nullable=True),
+    sa.Column('animal_id', sa.Integer(), nullable=False),
+    sa.Column('event_id', sa.Integer(), nullable=False),
     sa.Column('user_in_id', sa.Integer(), nullable=True),
     sa.Column('user_out_id', sa.Integer(), nullable=True),
     sa.Column('checked_in', sa.DateTime(), nullable=True),
     sa.Column('checked_out', sa.DateTime(), nullable=True),
     sa.Column('duration', sa.Interval(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
     sa.ForeignKeyConstraint(['event_id'], ['event.id'], ),
     sa.ForeignKeyConstraint(['user_in_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['user_out_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('animalcomment',
+    op.create_table('eventcomment',
     sa.Column('comment', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('animal_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('event_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['event_id'], ['event.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('userevent',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('event_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    op.create_table('user_event',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('event_id', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('assigner_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['event_id'], ['event.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'event_id')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('userevent')
-    op.drop_table('animalcomment')
+    op.drop_table('user_event')
+    op.drop_table('eventcomment')
     op.drop_table('animal_event')
-    op.drop_table('membership')
     op.drop_table('event')
     op.drop_table('animal_health_log')
     op.drop_table('animal_audit')
-    op.drop_table('animal_activity_log')
     op.drop_table('user')
-    op.drop_table('rolepermission')
-    op.drop_table('group')
+    op.drop_index('ix_unique_name_zoo_id_group_id', table_name='event_type')
     op.drop_table('event_type')
+    op.drop_table('animal_activity_log')
+    op.drop_table('rolepermission')
+    op.drop_index('ix_unique_title_zoo_id', table_name='group')
+    op.drop_table('group')
     op.drop_table('animal')
     op.drop_table('zoo')
     op.drop_table('role')

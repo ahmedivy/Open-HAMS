@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
+import sqlalchemy as sa
 from sqlalchemy import Index
+from sqlalchemy.types import TIMESTAMP
 from sqlmodel import Field, Relationship, SQLModel
 
 from core.utils import created_at_field, updated_at_field
@@ -116,7 +118,7 @@ class User(UserPublic, table=True):
 
     audits: list["AnimalAudit"] = Relationship(back_populates="user")
     comments: list["EventComment"] = Relationship(back_populates="user")
-
+    health_logs: list["AnimalHealthLog"] = Relationship(back_populates="user")
     events_link: list["UserEvent"] = Relationship(back_populates="user")
 
 
@@ -131,8 +133,8 @@ class AnimalEvent(SQLModel, table=True):
 
     id: int = Field(primary_key=True)
 
-    animal_id: int | None = Field(default=None, foreign_key="animal.id")
-    event_id: int | None = Field(default=None, foreign_key="event.id")
+    animal_id: int = Field(default=None, foreign_key="animal.id")
+    event_id: int = Field(default=None, foreign_key="event.id")
 
     user_in_id: int | None = Field(default=None, foreign_key="user.id")
     user_out_id: int | None = Field(default=None, foreign_key="user.id")
@@ -229,8 +231,16 @@ class EventType(EventTypeIn, table=True):
 class EventIn(SQLModel):
     name: str
     description: str
-    start_at: datetime
-    end_at: datetime
+    start_at: datetime = Field(
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        )
+    )
+    end_at: datetime = Field(
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        )
+    )
     event_type_id: int = Field(foreign_key="event_type.id")
     zoo_id: int = Field(foreign_key="zoo.id")
 
@@ -270,6 +280,8 @@ class AnimalAudit(SQLModel, table=True):
     changed_field: str
     old_value: str | None = Field(default=None)
     new_value: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    action: str
 
     changed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     changed_by: int = Field(foreign_key="user.id")
@@ -285,8 +297,10 @@ class AnimalHealthLog(SQLModel, table=True):
     animal_id: int = Field(foreign_key="animal.id")
     details: str
     logged_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    logged_by: int = Field(foreign_key="user.id")
 
     animal: Animal = Relationship(back_populates="health_logs")
+    user: User = Relationship(back_populates="health_logs")
 
 
 class EventCommentIn(SQLModel):
@@ -308,11 +322,17 @@ class EventComment(EventCommentIn, table=True):
 
 
 class UserEvent(SQLModel, table=True):
-    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
-    event_id: int | None = Field(default=None, foreign_key="event.id", primary_key=True)
+    __tablename__ = "user_event"  # type: ignore
+
+    id: int = Field(primary_key=True)
+
+    user_id: int | None = Field(default=None, foreign_key="user.id")
+    event_id: int | None = Field(default=None, foreign_key="event.id")
 
     created_at: datetime = created_at_field()
     updated_at: datetime = updated_at_field()
+
+    assigner_id: int | None
 
     user: User = Relationship(back_populates="events_link")
     event: Event = Relationship(back_populates="users_link")

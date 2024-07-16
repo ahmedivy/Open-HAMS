@@ -3,14 +3,13 @@ from typing import Annotated, AsyncGenerator
 from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.exceptions import HTTPException
 
 from core.db import engine
 from core.security import get_token_data
 from db.users import get_user_by_username
-from models import User, UserWithDetails
+from models import User
 from schemas import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
