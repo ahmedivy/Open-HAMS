@@ -5,25 +5,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { AutoComplete } from "antd";
-
 import { Button } from "@/components/ui/button";
 
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { DatePickerWithRange } from "../dashboard/data-range-picker";
-import { Avatar, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { TimePicker } from "../ui/time-picker/time-picker-12h";
 
-import { EventSchema, eventSchema } from "@/api/schemas/event";
-import { useEventType } from "@/queries/roles";
-import { useAnimal, useZoos } from "@/queries/zoo";
+import {
+  EventSchema,
+  eventSchema,
+  transformEventSchema,
+} from "@/api/schemas/event";
+import { useEventType } from "@/api/queries";
+import { useHandlers } from "@/api/queries";
+import { useAnimalStatus, useZoos } from "@/api/queries";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { LoadingDots, Spinner } from "../icons";
+import { Avatar, AvatarImage } from "../ui/avatar";
 import {
   Form,
   FormControl,
@@ -39,21 +43,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useQuery } from "react-query";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { CustomSelect } from "./custom-select";
 
 export function NewEventModel() {
-  const [date, setDate] = useState(new Date());
-  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventType();
-
-  const { data: zoos, isLoading: isLoadingZoos } = useZoos();
-
   const form = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
     defaultValues: {},
   });
 
+  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventType();
+  const { data: zoos, isLoading: isLoadingZoos } = useZoos();
+  const { data: handlers, isLoading: isLoadingHandlers } = useHandlers();
+  const { data: animals, isLoading: isLoadingAnimals } = useAnimalStatus(
+    form.getValues("zoo_id"),
+  );
+
+  const [selectedAnimals, setSelectedAnimals] = useState<string[]>([]);
+  const [selectedHandlers, setSelectedHandlers] = useState<string[]>([]);
+  const [checkoutImmediately, setCheckoutImmediately] =
+    useState<boolean>(false);
+
+  if (
+    isLoadingEventTypes ||
+    isLoadingZoos ||
+    isLoadingHandlers ||
+    isLoadingAnimals
+  ) {
+    return <LoadingDots className="size-4" />;
+  }
+
   const onSubmit = (values: EventSchema) => {
-    console.log(values);
+    const eventData = transformEventSchema(values);
+    const data = {
+      event: eventData,
+      animals: selectedAnimals,
+      handlers: selectedHandlers,
+      checkoutImmediately,
+    };
+
+    console.log(data);
   };
 
   return (
@@ -145,25 +179,156 @@ export function NewEventModel() {
             </div>
             <div className="flex flex-col gap-4">
               <div className="grid w-72 gap-4 rounded-lg bg-[#E5EEF5] p-4">
-                <HandlerSelect />
                 <div className="grid gap-2">
-                  <Label className="text-sm">Animals</Label>
-                  <div className="flex items-center gap-2">
-                    <Plus className="size-4" />
-                    {/* <Avatar className="size-5">
-                    <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
-                    </Avatar>
-                    <Avatar className="size-5">
-                    <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
-                    </Avatar>
-                    <Avatar className="size-5">
-                    <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
-                    </Avatar> */}
-                  </div>
+                  <CustomSelect
+                    label="Handlers"
+                    placeholder="Search handlers"
+                    options={handlers!.map((handler) => ({
+                      value: handler.id.toString(),
+                      label: `${handler.first_name} ${handler.last_name}`,
+                      toRender: (
+                        <>
+                          <Avatar className="size-5">
+                            <AvatarImage src="/placeholder-avatar.png" />
+                          </Avatar>
+                          <span className="text-xs font-light text-foreground">
+                            {handler.first_name} {handler.last_name}
+                          </span>
+                        </>
+                      ),
+                    }))}
+                    selected={selectedHandlers}
+                    setSelected={setSelectedHandlers}
+                    listElement={({ value }: { value: string }) => {
+                      const handler = handlers!.find(
+                        (handler) => handler.id.toString() === value,
+                      );
+                      return (
+                        <AvatarWithTooltip src="/placeholder-avatar.png">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="size-8">
+                              <AvatarImage src="/placeholder-avatar.png" />
+                            </Avatar>
+                            <span className="text-md font-semibold">
+                              {handler?.first_name} {handler?.last_name}
+                            </span>
+                            <Button
+                              className="ml-auto"
+                              size={"xs"}
+                              onClick={(e) => {
+                                e.preventDefault();
+
+                                setSelectedHandlers((prev) =>
+                                  prev.filter((id) => id !== value),
+                                );
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Label className="text-xs font-semibold">
+                              Email:
+                            </Label>
+                            <span className="text-xs">{handler?.email}</span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Label className="text-xs font-semibold">
+                              Zoo:
+                            </Label>
+                            <span className="text-xs">
+                              {handler?.zoo?.name}
+                            </span>
+                          </div>
+                        </AvatarWithTooltip>
+                      );
+                    }}
+                  />
+                  <CustomSelect
+                    label="Animals"
+                    placeholder="Search animals"
+                    options={animals!.map((animal_info) => ({
+                      value: animal_info.animal.id.toString(),
+                      label: animal_info.animal.name,
+                      toRender: (
+                        <>
+                          <Avatar className="size-5">
+                            <AvatarImage src="/placeholder-avatar.png" />
+                          </Avatar>
+                          <span className="font-extralightlight text-xs text-foreground">
+                            {animal_info.animal.name}
+                          </span>
+                          <span className="ml-auto">
+                            {animal_info.status === "available" ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-green-400">
+                                  Available
+                                </span>
+                              </div>
+                            ) : animal_info.status === "unavailable" ? (
+                              <div className="flex items-center">
+                                <span>Unavailable</span>
+                                <span className="w-[30px] text-wrap text-start text-[8px] leading-tight">
+                                  {animal_info.status_description}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="">Checked Out</span>
+                            )}
+                          </span>
+                        </>
+                      ),
+                    }))}
+                    selected={selectedAnimals}
+                    setSelected={setSelectedAnimals}
+                    listElement={({ value }: { value: string }) => {
+                      const animal = animals!.find(
+                        (animal_info) =>
+                          animal_info.animal.id.toString() === value,
+                      );
+                      return (
+                        <AvatarWithTooltip src="/placeholder-avatar.png">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="size-8">
+                              <AvatarImage src="/placeholder-avatar.png" />
+                            </Avatar>
+                            <span className="text-md font-semibold">
+                              {animal?.animal.name}
+                            </span>
+                            <Button
+                              className="ml-auto"
+                              size={"xs"}
+                              onClick={(e) => {
+                                e.preventDefault();
+
+                                setSelectedAnimals((prev) =>
+                                  prev.filter((id) => id !== value),
+                                );
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+
+                          <div className="mt-2 flex items-center gap-2">
+                            <Label className="text-xs font-semibold">
+                              Status:
+                            </Label>
+                            <span className="text-xs">
+                              {animal?.status_description}
+                            </span>
+                          </div>
+                        </AvatarWithTooltip>
+                      );
+                    }}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Check out immediately</Label>
-                  <Switch />
+                  <Switch
+                    checked={checkoutImmediately}
+                    onCheckedChange={setCheckoutImmediately}
+                  />
                 </div>
               </div>
               <FormField
@@ -223,8 +388,13 @@ export function NewEventModel() {
                   </FormItem>
                 )}
               />
-              <div className="my-2 flex justify-end">
-                <Button>Create</Button>
+              <div className="mt-auto flex justify-end">
+                <Button disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
+                    <Spinner className="mr-2 size-4" />
+                  ) : null}
+                  Create
+                </Button>
               </div>
             </div>
           </form>
@@ -234,54 +404,25 @@ export function NewEventModel() {
   );
 }
 
-function HandlerSelect() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedHandlers, setSelectedHandlers] = useState<string[]>([]);
-  const [value, setValue] = useState("");
-
-  const {data: animals, isLoading} = useQuery({
-    queryKey: ["animals", "statuses"]
-  })
-
-  const options = [
-    { value: "control mode", label: "Control Mode" },
-    { value: "manual mode", label: "Manual Mode" },
-    { value: "auto mode", label: "Auto Mode" },
-  ];
-
-  const onSelect = (value: string) => {
-    setSelectedHandlers([...selectedHandlers, value]);
-    setValue("");
-  };
-
+function AvatarWithTooltip({
+  src,
+  children,
+}: {
+  src: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="grid gap-2">
-      <Label className="text-sm">Handler</Label>
-      <div className="flex items-center gap-2">
-        {isOpen ? (
-          <>
-            <AutoComplete
-              value={value}
-              options={options}
-              style={{ width: 200 }}
-              onSelect={onSelect}
-              onSearch={() => {}}
-              onChange={(value) => setValue(value)}
-              placeholder="control mode"
-            />
-          </>
-        ) : (
-          <>
-            <Plus
-              className="size-5 cursor-pointer"
-              onClick={() => setIsOpen(true)}
-            />
-            <Avatar className="size-6">
-              <AvatarImage src="https://avatar.vercel.sh/ahmedivy.png" />
-            </Avatar>
-          </>
-        )}
-      </div>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Avatar className="size-8">
+            <AvatarImage src={src} />
+          </Avatar>
+        </TooltipTrigger>
+        <TooltipContent className="min-w-[200px] border bg-background shadow-lg">
+          {children}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

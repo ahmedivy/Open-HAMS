@@ -6,7 +6,6 @@ export const animalSchema = z.object({
     .string()
     .min(2, "Species must be between 2 and 50 characters")
     .max(50),
-  kind: z.string().min(2, "Kind must be between 2 and 50 characters").max(50),
   description: z
     .string()
     .min(2, "Description must be between 2 and 500 characters")

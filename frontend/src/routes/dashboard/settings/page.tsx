@@ -1,8 +1,8 @@
+import { useUser } from "@/api/queries";
 import { AdminSettings } from "@/components/settings/admin";
 import { GeneralSettings } from "@/components/settings/general";
 import { ReportsSettings } from "@/components/settings/reports";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUser } from "@/queries/user";
 import { Loading } from "@/routes/loading";
 import { Heart } from "lucide-react";
 import { useSearchParams } from "react-router-dom";

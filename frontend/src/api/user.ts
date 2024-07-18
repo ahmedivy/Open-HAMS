@@ -8,7 +8,7 @@ export async function getAuthenticatedUser(): Promise<User> {
 
   if (res.status === 401) {
     localStorage.removeItem("token");
-    window.location.href = "/";
+    if (window.location.href !== "/") window.location.href = "/";
   }
 
   return res.data as User;
@@ -45,4 +45,10 @@ export async function updateGroup(userId: number, groupId: number | null) {
     `/users/${userId}/group/${groupId ? `?group_id=${groupId}` : ""}`,
   );
   return res;
+}
+
+export async function getHandlers() {
+  const res = await instance.get("/users/handlers/");
+  console.log(res.data);
+  return res.data as User[];
 }

@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGroups } from "@/queries/user";
-import { useZoos } from "@/queries/zoo";
+import { useGroups } from "@/api/queries";
+import { useZoos } from "@/api/queries";
 import { EventType } from "@/utils/types";
 import { useMutation } from "react-query";
 import { toast } from "sonner";

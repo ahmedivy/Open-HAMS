@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRoles } from "@/queries/roles";
-import { useGroups } from "@/queries/user";
+import { useRoles } from "@/api/queries";
+import { useGroups } from "@/api/queries";
 import { capitalize } from "@/utils";
 import { User } from "@/utils/types";
 import { useMutation } from "react-query";

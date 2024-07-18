@@ -1,5 +1,5 @@
 import { logout } from "@/api/auth";
-import { useUser } from "@/queries/user";
+import { useUser } from "@/api/queries";
 import { cn } from "@/utils";
 import {
   Activity,

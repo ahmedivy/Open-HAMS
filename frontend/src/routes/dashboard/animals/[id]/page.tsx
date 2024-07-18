@@ -1,7 +1,7 @@
+import { useAnimal } from "@/api/queries";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAnimal } from "@/queries/zoo";
 import { Loading } from "@/routes/loading";
 import { cn } from "@/utils";
 import { useParams } from "react-router-dom";
@@ -24,7 +24,6 @@ export function AnimalDetailsPage() {
           <h1 className="text-center text-2xl text-black">{animal.name}</h1>
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <Feature title="Kind" details={animal.kind} />
               <Feature title="Species" details={animal.species} />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -54,7 +53,9 @@ export function AnimalDetailsPage() {
                   Available
                 </Badge>
               </div>
-              <CardDetails className="text-green-400 font-semibold">Checked In</CardDetails>
+              <CardDetails className="font-semibold text-green-400">
+                Checked In
+              </CardDetails>
             </Card>
             <Card>
               <CardHeading>Weekly Event Acitivity</CardHeading>
@@ -72,8 +73,6 @@ export function AnimalDetailsPage() {
               <CardDetails className="text-2xl">8</CardDetails>
             </Card>
           </div>
-
-          
         </div>
       </section>
       <section className="px-12 py-2">

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 import { createGroup } from "@/api/group";
 import { GroupSchema, groupSchema } from "@/api/schemas/group";
-import { useZoos } from "@/queries/zoo";
+import { useZoos } from "@/api/queries";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

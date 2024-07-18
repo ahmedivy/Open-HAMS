@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { userManagementColumns } from "../tables/user-management/user-management-cols";
 
 import { getUsers } from "@/api/user";
-import { useEventType } from "@/queries/roles";
+import { useEventType } from "@/api/queries";
 import { Loading } from "@/routes/loading";
 import { User } from "@/utils/types";
 import { useQuery } from "react-query";

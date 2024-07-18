@@ -6,9 +6,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { useAnimal, useZoos } from "@/api/queries";
 import { animalSchema, AnimalSchema } from "@/api/schemas/animal";
 import { tiers } from "@/api/utils";
-import { useAnimal, useZoos } from "@/queries/zoo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { LoadingDots, Spinner } from "../icons";
@@ -47,7 +47,6 @@ export function AnimalModel(props: {
     defaultValues:
       props.mode === "edit"
         ? {
-            kind: animal?.kind!,
             name: animal?.name!,
             species: animal?.species!,
             image: animal?.image!,
@@ -97,19 +96,6 @@ export function AnimalModel(props: {
                     <FormLabel>Name</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter the animal's name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="kind"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kind</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter the kind" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

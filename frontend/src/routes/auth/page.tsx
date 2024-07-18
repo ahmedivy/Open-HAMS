@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { login } from "@/api/auth";
+import { login, logout } from "@/api/auth";
 import { loginSchema, LoginSchema } from "@/api/schemas/auth";
 import { Spinner } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,28 @@ export function LoginPage() {
       password: "",
     },
   });
+
+  if (localStorage.getItem("token")) {
+    return (
+      <div className="mt-2 grid w-full max-w-96 place-content-center gap-6 space-y-4 lg:mt-12">
+        <span className="text-center">You are logged in</span>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              logout();
+              window.location.reload();
+            }}
+          >
+            Log Out
+          </Button>
+          <Button asChild>
+            <Link to="/dashboard">Go to Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   async function onSubmit(values: LoginSchema) {
     console.log(values);

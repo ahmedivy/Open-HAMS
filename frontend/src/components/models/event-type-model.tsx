@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 
 import { createEventType, updateEventType } from "@/api/event-type";
 import { eventTypeSchema, EventTypeSchema } from "@/api/schemas/event-type";
-import { useGroups } from "@/queries/user";
-import { useZoos } from "@/queries/zoo";
+import { useGroups } from "@/api/queries";
+import { useZoos } from "@/api/queries";
 import { EventType } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
