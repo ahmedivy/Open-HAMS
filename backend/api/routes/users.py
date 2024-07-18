@@ -57,8 +57,14 @@ async def login(
 
 @router.get("/", response_model=list[UserWithDetails])
 async def get_users(session: SessionDep):
-    users = (await session.exec(select(User).order_by(User.created_at))).unique() # type: ignore
+    users = (await session.exec(select(User).order_by(User.created_at))).unique()  # type: ignore
     return users
+
+
+@router.get("/handlers")
+async def get_handlers(session: SessionDep) -> list[UserWithDetails]:
+    handlers = (await session.exec(select(User).where(User.role_id == 2))).unique()
+    return list(handlers) # type: ignore
 
 
 @router.delete("/")

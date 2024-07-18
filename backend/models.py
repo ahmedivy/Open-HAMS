@@ -252,7 +252,7 @@ class Event(EventIn, table=True):
     updated_at: datetime = updated_at_field()
 
     event_type: EventType = Relationship(
-        back_populates="events", sa_relationship_kwargs={"lazy": "joined"}
+        back_populates="events", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
     zoo: Zoo = Relationship(back_populates="events")

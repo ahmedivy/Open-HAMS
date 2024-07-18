@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy import func
 from sqlmodel import and_, col, select
 
 from api.deps import CurrentUser, SessionDep
@@ -23,8 +24,22 @@ router = APIRouter(prefix="/events", tags=["Events"])
 
 
 @router.get("/")
-async def read_all_events(session: SessionDep) -> list[Event]:
-    return await get_all_events(session)
+async def read_all_events(session: SessionDep):
+    query = (
+        select(
+            Event,
+            EventType,
+            func.count(col(AnimalEvent.animal_id)).label("animal_count"),
+        )
+        .join(AnimalEvent, isouter=True)
+        .join(EventType)
+        .group_by(col(Event.id), col(EventType.id))
+    )
+    events = (await session.exec(query)).all()
+    return [
+        {"event": event, "animal_count": animal_count, "event_type": event_type}
+        for event,  event_type, animal_count in events
+    ]
 
 
 @router.post("/")
@@ -112,7 +127,7 @@ async def create_event(
 
     await session.commit()
     await session.refresh(event)
-    
+
     return event
 
 
