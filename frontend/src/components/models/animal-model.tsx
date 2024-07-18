@@ -72,7 +72,7 @@ export function AnimalModel(props: {
   return (
     <Dialog>
       <DialogTrigger>{props.children}</DialogTrigger>
-      <DialogContent className="bg-blueish">
+      <DialogContent className="bg-model">
         <DialogTitle className="text-center font-light">
           {
             {

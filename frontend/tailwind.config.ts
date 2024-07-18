@@ -57,6 +57,7 @@ export default {
         },
         blueish: "var(--blueish)",
         greenish: "var(--greenish)",
+        model: "hsl(208deg, 42.9%, 93.1%)"
       },
       borderRadius: {
         lg: "var(--radius)",

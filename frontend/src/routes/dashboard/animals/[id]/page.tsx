@@ -59,7 +59,7 @@ export function AnimalDetailsPage() {
             </Card>
             <Card className="gap-2">
               <CardHeading>Weekly Event Acitivity</CardHeading>
-              <CardDetails className="flex flex-col gap-0">
+              <CardDetails className="flex flex-col gap-0 text-black">
                 <span className="text-2xl">{4.5}</span>
                 <span className="text-sm font-light">hours</span>
               </CardDetails>
@@ -67,13 +67,13 @@ export function AnimalDetailsPage() {
             <Card className="gap-2">
               <CardHeading className="flex items-center justify-between">
                 <span>Max Checkout Hours</span>
-                <span className="text-2xl font-black text-black">
+                <span className="text-2xl font-bold text-black">
                   {animal.max_daily_checkout_hours}
                 </span>
               </CardHeading>
               <CardHeading className="flex items-center justify-between">
                 <span>Event Rest Hours</span>
-                <span className="text-2xl font-black text-black">
+                <span className="text-2xl font-bold text-black">
                   {animal.rest_time}
                 </span>
               </CardHeading>
@@ -85,7 +85,7 @@ export function AnimalDetailsPage() {
           </div>
           <div className="mt-6">
             <Tabs defaultValue="currentEvents">
-              <TabsList className="bg-[#E6EEF5]">
+            <TabsList className="bg-model">
                 <TabsTrigger
                   value="currentEvents"
                   className=" px-3 text-sm data-[state=active]:bg-primary"
@@ -105,7 +105,25 @@ export function AnimalDetailsPage() {
                   Past Events
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="currentEvents"></TabsContent>
+              <TabsContent value="currentEvents">
+                <Card className="w-full">
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Event Name</h3>
+                      <Badge variant={"outline"}>Event Type</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        June 7th, 2021 - June 8th, 2021
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Start Time: <span className="font-semibold">10:00 AM</span> - End Time:{" "}
+                        <span className="font-semibold">12:00 PM</span>
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
               <TabsContent value="upcomingEvents"></TabsContent>
               <TabsContent value="pastEvents"></TabsContent>
             </Tabs>

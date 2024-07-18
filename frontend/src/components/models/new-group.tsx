@@ -66,7 +66,7 @@ export function NewGroupModel() {
       <DialogTrigger>
         <Button>Add Group</Button>
       </DialogTrigger>
-      <DialogContent className="bg-blueish">
+      <DialogContent className="bg-model">
         <div className="grid gap-4">
           <Form {...form}>
             <form
