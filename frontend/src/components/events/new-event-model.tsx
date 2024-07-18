@@ -16,16 +16,21 @@ import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { TimePicker } from "../ui/time-picker/time-picker-12h";
 
+import { createEvent } from "@/api/event";
+import {
+  useAnimalStatus,
+  useEventType,
+  useHandlers,
+  useZoos,
+} from "@/api/queries";
 import {
   EventSchema,
   eventSchema,
   transformEventSchema,
 } from "@/api/schemas/event";
-import { useEventType } from "@/api/queries";
-import { useHandlers } from "@/api/queries";
-import { useAnimalStatus, useZoos } from "@/api/queries";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { LoadingDots, Spinner } from "../icons";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import {
@@ -78,16 +83,24 @@ export function NewEventModel() {
     return <LoadingDots className="size-4" />;
   }
 
-  const onSubmit = (values: EventSchema) => {
+  const onSubmit = async (values: EventSchema) => {
     const eventData = transformEventSchema(values);
     const data = {
       event: eventData,
-      animals: selectedAnimals,
-      handlers: selectedHandlers,
-      checkoutImmediately,
+      animal_ids: selectedAnimals,
+      user_ids: selectedHandlers,
+      checkout_immediately: checkoutImmediately,
     };
 
     console.log(data);
+
+    const res = await createEvent(data);
+    if (res.status === 200) {
+      form.reset();
+      toast.success("Event created successfully");
+    } else {
+      toast.error(res.data.detail);
+    }
   };
 
   return (

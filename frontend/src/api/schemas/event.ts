@@ -60,3 +60,4 @@ export function transformEventSchema(data: EventSchema) {
 }
 
 export type EventSchema = z.infer<typeof eventSchema>;
+export type TrasformedEventSchema = ReturnType<typeof transformEventSchema>;

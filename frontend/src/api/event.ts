@@ -1,5 +1,6 @@
-import { Event, EventType } from "@/utils/types";
+import { Event, EventType, EventWithDetails } from "@/utils/types";
 import instance from "./axios";
+import { TrasformedEventSchema } from "./schemas/event";
 
 export type EventWithCount = {
   event: Event;
@@ -10,4 +11,31 @@ export type EventWithCount = {
 export async function getEvents() {
   const res = await instance.get("/events");
   return res.data as EventWithCount[];
+}
+
+export type CreateEventSchema = {
+  event: TrasformedEventSchema;
+  user_ids: string[];
+  animal_ids: string[];
+  checkout_immediately: boolean;
+};
+
+export async function createEvent(values: CreateEventSchema) {
+  const res = await instance.post("/events", values);
+  return res;
+}
+
+export async function updateEvent(values: CreateEventSchema, eventId: string) {
+  const res = await instance.put(`/events/${eventId}`, values);
+  return res;
+}
+
+export async function deleteEvent(id: string) {
+  const res = await instance.delete(`/events/${id}`);
+  return res;
+}
+
+export async function getEventDetails(id: string) {
+  const res = await instance.get(`/events/${id}`);
+  return res.data as EventWithDetails;
 }

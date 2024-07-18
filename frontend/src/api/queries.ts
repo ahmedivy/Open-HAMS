@@ -1,4 +1,4 @@
-import { EventWithCount, getEvents } from "@/api/event";
+import { EventWithCount, getEventDetails, getEvents } from "@/api/event";
 import { useQuery } from "react-query";
 
 import type { AnimalStatus } from "@/api/animals";
@@ -6,7 +6,7 @@ import { getAnimal, getAnimalsWithStatus } from "@/api/animals";
 import { getGroups } from "@/api/group";
 import { getAuthenticatedUser, getHandlers } from "@/api/user";
 import { getZoos } from "@/api/zoo";
-import { Animal, Group, User, Zoo } from "@/utils/types";
+import { Animal, EventWithDetails, Group, User, Zoo } from "@/utils/types";
 
 import { getEventTypes } from "@/api/event-type";
 import { getRoles } from "@/api/roles";
@@ -72,5 +72,13 @@ export function useAnimalStatus(zoo_id?: string) {
   return useQuery<AnimalStatus[]>({
     queryFn: () => getAnimalsWithStatus(zoo_id),
     queryKey: ["animals", "statuses"],
+  });
+}
+
+export function useEvent(eventId: string) {
+  return useQuery<EventWithDetails>({
+    queryKey: ["event", eventId],
+    queryFn: () => getEventDetails(eventId),
+    refetchOnMount: true,
   });
 }

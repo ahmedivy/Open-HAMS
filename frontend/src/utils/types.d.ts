@@ -7,3 +7,4 @@ export type Group = components["schemas"]["GroupWithZoo"];
 export type EventType = components["schemas"]["EventType"];
 export type Animal = components["schemas"]["Animal"];
 export type Event = components["schemas"]["Event"];
+export type EventWithDetails = components["schemas"]["EventWithDetails"];

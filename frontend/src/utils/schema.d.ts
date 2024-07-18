@@ -726,6 +726,16 @@ export interface components {
             /** Group Id */
             group_id?: number | null;
         };
+        /** EventWithDetails */
+        EventWithDetails: {
+            event: components["schemas"]["Event"];
+            /** Animals */
+            animals: components["schemas"]["Animal"][];
+            /** Users */
+            users: components["schemas"]["UserPublic"][];
+            event_type: components["schemas"]["EventType"];
+            zoo: components["schemas"]["Zoo"];
+        };
         /** Group */
         Group: {
             /** Title */
@@ -830,6 +840,40 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+        };
+        /** UserPublic */
+        UserPublic: {
+            /** Id */
+            id: number;
+            /** Email */
+            email: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Username */
+            username: string;
+            /**
+             * Tier
+             * @default 1
+             */
+            tier: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Role Id */
+            role_id: number;
+            /** Zoo Id */
+            zoo_id: number | null;
+            /** Group Id */
+            group_id?: number | null;
         };
         /** UserUpdate */
         UserUpdate: {
@@ -1675,7 +1719,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Event"][];
+                    "application/json": unknown;
                 };
             };
         };
@@ -1730,7 +1774,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Event"];
+                    "application/json": components["schemas"]["EventWithDetails"];
                 };
             };
             /** @description Validation Error */

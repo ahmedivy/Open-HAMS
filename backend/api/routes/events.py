@@ -1,13 +1,14 @@
 from datetime import UTC, datetime
+from shlex import join
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy import func
+from sqlalchemy import JSON, func
+from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
 from api.deps import CurrentUser, SessionDep
 from db.animals import log_activity, log_audit
-from db.events import get_all_events
 from db.utils import has_permission
 from models import (
     Animal,
@@ -16,6 +17,7 @@ from models import (
     EventCreate,
     EventIn,
     EventType,
+    EventWithDetails,
     User,
     UserEvent,
 )
@@ -38,7 +40,7 @@ async def read_all_events(session: SessionDep):
     events = (await session.exec(query)).all()
     return [
         {"event": event, "animal_count": animal_count, "event_type": event_type}
-        for event,  event_type, animal_count in events
+        for event, event_type, animal_count in events
     ]
 
 
@@ -131,21 +133,10 @@ async def create_event(
     return event
 
 
-@router.get("/{event_id}")
-async def read_event(event_id: int, session: SessionDep) -> Event:
-    event = await session.get(Event, event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return event
-
-
 @router.put("/{event_id}")
 async def update_event(
-    event_id: int,
-    event_update: EventIn,
-    session: SessionDep,
-    current_user: CurrentUser,
-) -> Event:
+    body: EventCreate, session: SessionDep, current_user: CurrentUser, event_id: int
+):
     if not has_permission(current_user.role.permissions, "manage_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
@@ -155,12 +146,176 @@ async def update_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    for field, value in event_update.model_dump().items():
-        setattr(event, field, value)
+    # validate event type
+    event_type = await session.exec(
+        select(EventType.id).where(
+            and_(
+                EventType.id == body.event.event_type_id,
+                EventType.zoo_id == body.event.zoo_id,
+            )
+        )
+    )
+    if not event_type.first():
+        raise HTTPException(status_code=404, detail="Event type not found for this zoo")
+
+    # validate users
+    users = await session.exec(select(User).where(col(User.id).in_(body.user_ids)))
+    users = list(users.unique())
+    if len(users) != len(body.user_ids):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # validate animals
+    animals = await session.exec(
+        select(Animal).where(
+            and_(
+                col(Animal.id).in_(body.animal_ids), Animal.zoo_id == body.event.zoo_id
+            )
+        )
+    )
+    animals = animals.all()
+    if len(animals) != len(body.animal_ids):
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    # check if animals are already assigned to an event during this time
+    clashing_animals = await session.exec(
+        select(Animal.name)
+        .join(AnimalEvent)
+        .join(Event)
+        .where(
+            and_(
+                Event.start_at <= body.event.end_at,
+                Event.end_at >= body.event.start_at,
+                Event.zoo_id == body.event.zoo_id,
+                col(Animal.id).in_(body.animal_ids),
+            )
+        )
+        .group_by(Animal.name)
+    )
+    if clashing_animals.all():
+        raise HTTPException(
+            status_code=400,
+            detail="Some animals are already assigned to an event during this time",
+        )
+
+    for k, v in body.event.model_dump().items():
+        setattr(event, k, v)
+
+    # existing_users
+    existing_users = await session.exec(
+        select(UserEvent).where(UserEvent.event_id == event_id)
+    )
+    existing_users = existing_users.all()
+
+    # existing_animals
+    existing_animals = await session.exec(
+        select(AnimalEvent).where(AnimalEvent.event_id == event_id)
+    )
+    existing_animals = existing_animals.all()
+
+    # to remove users
+    to_remove_users = [
+        user for user in existing_users if user.user_id not in body.user_ids
+    ]
+    for user in to_remove_users:
+        await session.delete(user)
+
+    # to remove animals
+    to_remove_animals = [
+        animal for animal in existing_animals if animal.animal_id not in body.animal_ids
+    ]
+    for animal in to_remove_animals:
+        await session.delete(animal)
+
+    # to add users
+    to_add_users = [
+        user
+        for user in body.user_ids
+        if user not in [user.user_id for user in existing_users]
+    ]
+    for user in to_add_users:
+        user_link = UserEvent(
+            user_id=user,
+            event_id=event_id,
+            assigner_id=current_user.id,  # type: ignore
+        )
+        session.add(user_link)
+
+    # to add animals
+    to_add_animals = [
+        animal
+        for animal in body.animal_ids
+        if animal not in [animal.animal_id for animal in existing_animals]
+    ]
+    for animal in to_add_animals:
+        animal_link = AnimalEvent(animal_id=animal, event_id=event_id)  # type: ignore
+        session.add(animal_link)
 
     await session.commit()
     await session.refresh(event)
-    return event
+
+    return JSONResponse({"message": "Event updated"}, status_code=200)
+
+
+@router.delete("/{event_id}")
+async def delete_event(event_id: int, session: SessionDep, current_user: CurrentUser):
+    if not has_permission(current_user.role.permissions, "manage_events"):
+        raise HTTPException(
+            status_code=401, detail="You are not authorized to perform this action"
+        )
+
+    event = await session.get(Event, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # delete all user links
+    user_links = await session.exec(
+        select(UserEvent).where(UserEvent.event_id == event_id)
+    )
+    for user_link in user_links:
+        await session.delete(user_link)
+
+    # delete all animal links
+    animal_links = await session.exec(
+        select(AnimalEvent).where(AnimalEvent.event_id == event_id)
+    )
+    for animal_link in animal_links:
+        await session.delete(animal_link)
+
+    await session.delete(event)
+    await session.commit()
+
+    return {"message": "Event deleted"}
+
+
+@router.get("/{event_id}")
+async def read_event(event_id: int, session: SessionDep) -> EventWithDetails:
+    event = await session.exec(
+        select(Event)
+        .where(Event.id == event_id)
+        .options(joinedload(Event.event_type), joinedload(Event.zoo))  # type: ignore
+    )
+    event = event.first()
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    handlers = await session.exec(
+        select(User).join(UserEvent).where(UserEvent.event_id == event_id)
+    )
+    handlers = list(handlers.unique())
+
+    animals = await session.exec(
+        select(Animal).join(AnimalEvent).where(AnimalEvent.event_id == event_id)
+    )
+    animals = list(animals.unique())
+
+    return EventWithDetails(
+        event=event,
+        event_type=event.event_type,
+        zoo=event.zoo,
+        users=handlers,  # type: ignore
+        animals=animals,
+    )
 
 
 @router.post("/{event_id}/assign-animals")

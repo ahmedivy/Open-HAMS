@@ -354,3 +354,10 @@ class EventCreate(SQLModel):
     animal_ids: list[int]
     user_ids: list[int]
     checkout_immediately: bool = False
+
+class EventWithDetails(SQLModel):
+    event: Event
+    animals: list[Animal]
+    users: list[UserPublic]
+    event_type: EventType
+    zoo: Zoo
