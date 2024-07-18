@@ -46,8 +46,8 @@ export function AnimalDetailsPage() {
         </div>
         <div className="flex w-2/3 flex-col">
           <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <div className="flex w-full items-center justify-between gap-2">
+            <Card className="gap-2">
+              <div className="flex w-full items-center justify-between gap-0">
                 <CardHeading>Event Status</CardHeading>
                 <Badge variant={"outline"} className="rounded-full">
                   Available
@@ -57,21 +57,58 @@ export function AnimalDetailsPage() {
                 Checked In
               </CardDetails>
             </Card>
-            <Card>
+            <Card className="gap-2">
               <CardHeading>Weekly Event Acitivity</CardHeading>
-              <CardDetails className="flex flex-col gap-1">
+              <CardDetails className="flex flex-col gap-0">
                 <span className="text-2xl">{4.5}</span>
                 <span className="text-sm font-light">hours</span>
               </CardDetails>
             </Card>
-            <Card>
-              <CardHeading>Max Daily Checkouts</CardHeading>
-              <CardDetails className="text-2xl">2</CardDetails>
+            <Card className="gap-2">
+              <CardHeading className="flex items-center justify-between">
+                <span>Max Checkout Hours</span>
+                <span className="text-2xl font-black text-black">
+                  {animal.max_daily_checkout_hours}
+                </span>
+              </CardHeading>
+              <CardHeading className="flex items-center justify-between">
+                <span>Event Rest Hours</span>
+                <span className="text-2xl font-black text-black">
+                  {animal.rest_time}
+                </span>
+              </CardHeading>
             </Card>
             <Card>
-              <CardHeading>Max Checkout Hours</CardHeading>
-              <CardDetails className="text-2xl">8</CardDetails>
+              <CardHeading>Daily Event Count</CardHeading>
+              <CardDetails className="text-2xl text-black">4 / 5</CardDetails>
             </Card>
+          </div>
+          <div className="mt-6">
+            <Tabs defaultValue="currentEvents">
+              <TabsList className="bg-[#E6EEF5]">
+                <TabsTrigger
+                  value="currentEvents"
+                  className=" px-3 text-sm data-[state=active]:bg-primary"
+                >
+                  Current Events
+                </TabsTrigger>
+                <TabsTrigger
+                  value="upcomingEvents"
+                  className=" px-3 text-sm data-[state=active]:bg-primary"
+                >
+                  Upcoming Events
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pastEvents"
+                  className=" px-3 text-sm data-[state=active]:bg-primary"
+                >
+                  Past Events
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="currentEvents"></TabsContent>
+              <TabsContent value="upcomingEvents"></TabsContent>
+              <TabsContent value="pastEvents"></TabsContent>
+            </Tabs>
           </div>
         </div>
       </section>
@@ -133,17 +170,39 @@ function Feature(props: { title: string; details: string }) {
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({
+  className,
+  children,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="flex flex-col gap-4 rounded-md bg-white p-6 shadow-sm">
+    <div
+      className={cn(
+        "flex flex-col gap-4 rounded-md bg-white p-6 shadow-sm",
+        className,
+      )}
+    >
       {children}
     </div>
   );
 }
 
-function CardHeading({ children }: { children: React.ReactNode }) {
+function CardHeading({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <h2 className="font-extralight leading-relaxed text-muted-foreground">
+    <h2
+      className={cn(
+        "font-extralight leading-relaxed text-muted-foreground",
+        className,
+      )}
+    >
       {children}
     </h2>
   );
