@@ -40,6 +40,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/handlers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Handlers */
+        get: operations["get_handlers_users_handlers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/me": {
         parameters: {
             query?: never;
@@ -216,6 +233,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/animals/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Animal Status */
+        get: operations["get_animal_status_animals_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/animals/{animal_id}": {
         parameters: {
             query?: never;
@@ -223,11 +257,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Animal */
+        get: operations["get_animal_animals__animal_id__get"];
         /** Update Animal */
         put: operations["update_animal_animals__animal_id__put"];
         post?: never;
-        delete?: never;
+        /** Delete Animal */
+        delete: operations["delete_animal_animals__animal_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -303,23 +339,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/{event_id}/animals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Event Animals */
-        get: operations["get_event_animals_events__event_id__animals_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/events/{event_id}/animal/{animal_id}/check-in": {
         parameters: {
             query?: never;
@@ -357,7 +376,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events-types/": {
+    "/event-type/": {
         parameters: {
             query?: never;
             header?: never;
@@ -365,10 +384,61 @@ export interface paths {
             cookie?: never;
         };
         /** Read All Events Types */
-        get: operations["read_all_events_types_events_types__get"];
+        get: operations["read_all_events_types_event_type__get"];
         put?: never;
         /** Create Event Type */
-        post: operations["create_event_type_events_types__post"];
+        post: operations["create_event_type_event_type__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-type/{event_type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Event Type */
+        put: operations["update_event_type_event_type__event_type_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-type/{event_id}/group/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Group */
+        put: operations["update_group_event_type__event_id__group__group_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-type/{event_id}/zoo/{zoo_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Zoo */
+        put: operations["update_zoo_event_type__event_id__zoo__zoo_id__put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -435,8 +505,6 @@ export interface components {
         Animal: {
             /** Name */
             name: string;
-            /** Kind */
-            kind: string;
             /** Species */
             species: string;
             /** Image */
@@ -474,6 +542,11 @@ export interface components {
             checked_in: boolean;
             /** Handling Enabled */
             handling_enabled: boolean;
+            /**
+             * Status
+             * @default checked_in
+             */
+            status: string | null;
             /** Zoo Id */
             zoo_id: number;
             /** Id */
@@ -493,8 +566,6 @@ export interface components {
         AnimalIn: {
             /** Name */
             name: string;
-            /** Kind */
-            kind: string;
             /** Species */
             species: string;
             /** Image */
@@ -532,6 +603,11 @@ export interface components {
             checked_in: boolean;
             /** Handling Enabled */
             handling_enabled: boolean;
+            /**
+             * Status
+             * @default checked_in
+             */
+            status: string | null;
             /** Zoo Id */
             zoo_id: number;
         };
@@ -555,8 +631,6 @@ export interface components {
         };
         /** Event */
         Event: {
-            /** Event Type Id */
-            event_type_id: number;
             /** Name */
             name: string;
             /** Description */
@@ -571,6 +645,8 @@ export interface components {
              * Format: date-time
              */
             end_at: string;
+            /** Event Type Id */
+            event_type_id: number;
             /** Zoo Id */
             zoo_id: number;
             /** Id */
@@ -586,10 +662,21 @@ export interface components {
              */
             updated_at: string;
         };
+        /** EventCreate */
+        EventCreate: {
+            event: components["schemas"]["EventIn"];
+            /** Animal Ids */
+            animal_ids: number[];
+            /** User Ids */
+            user_ids: number[];
+            /**
+             * Checkout Immediately
+             * @default false
+             */
+            checkout_immediately: boolean;
+        };
         /** EventIn */
         EventIn: {
-            /** Event Type Id */
-            event_type_id: number;
             /** Name */
             name: string;
             /** Description */
@@ -604,6 +691,8 @@ export interface components {
              * Format: date-time
              */
             end_at: string;
+            /** Event Type Id */
+            event_type_id: number;
             /** Zoo Id */
             zoo_id: number;
         };
@@ -636,12 +725,6 @@ export interface components {
             zoo_id: number;
             /** Group Id */
             group_id?: number | null;
-        };
-        /** EventWithAnimals */
-        EventWithAnimals: {
-            event: components["schemas"]["Event"];
-            /** Animals */
-            animals: components["schemas"]["Animal"][];
         };
         /** Group */
         Group: {
@@ -942,6 +1025,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_handlers_users_handlers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithDetails"][];
                 };
             };
         };
@@ -1429,6 +1532,68 @@ export interface operations {
             };
         };
     };
+    get_animal_status_animals_status_get: {
+        parameters: {
+            query?: {
+                zoo_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_animal_animals__animal_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Animal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_animal_animals__animal_id__put: {
         parameters: {
             query?: never;
@@ -1451,6 +1616,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Animal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_animal_animals__animal_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1493,7 +1689,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EventIn"];
+                "application/json": components["schemas"]["EventCreate"];
             };
         };
         responses: {
@@ -1503,7 +1699,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Event"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1653,37 +1849,6 @@ export interface operations {
             };
         };
     };
-    get_event_animals_events__event_id__animals_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                event_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventWithAnimals"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     check_in_animal_events__event_id__animal__animal_id__check_in_post: {
         parameters: {
             query?: never;
@@ -1748,7 +1913,7 @@ export interface operations {
             };
         };
     };
-    read_all_events_types_events_types__get: {
+    read_all_events_types_event_type__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1768,7 +1933,7 @@ export interface operations {
             };
         };
     };
-    create_event_type_events_types__post: {
+    create_event_type_event_type__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1780,6 +1945,105 @@ export interface operations {
                 "application/json": components["schemas"]["EventTypeIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_event_type_event_type__event_type_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_type_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTypeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_group_event_type__event_id__group__group_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_zoo_event_type__event_id__zoo__zoo_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+                zoo_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
