@@ -250,7 +250,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/animals/{animal_id}": {
+    "/animals/{animal_id}/details": {
         parameters: {
             query?: never;
             header?: never;
@@ -258,7 +258,23 @@ export interface paths {
             cookie?: never;
         };
         /** Get Animal */
-        get: operations["get_animal_animals__animal_id__get"];
+        get: operations["get_animal_animals__animal_id__details_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         /** Update Animal */
         put: operations["update_animal_animals__animal_id__put"];
         post?: never;
@@ -299,7 +315,8 @@ export interface paths {
         /** Update Event */
         put: operations["update_event_events__event_id__put"];
         post?: never;
-        delete?: never;
+        /** Delete Event */
+        delete: operations["delete_event_events__event_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -562,6 +579,40 @@ export interface components {
              */
             updated_at: string;
         };
+        /** AnimalEvent */
+        AnimalEvent: {
+            /** Id */
+            id: number;
+            /** Animal Id */
+            animal_id?: number;
+            /** Event Id */
+            event_id?: number;
+            /** User In Id */
+            user_in_id?: number | null;
+            /** User Out Id */
+            user_out_id?: number | null;
+            /** Checked In */
+            checked_in?: string | null;
+            /** Checked Out */
+            checked_out?: string | null;
+            /** Duration */
+            duration?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** AnimalEventWithDetails */
+        AnimalEventWithDetails: {
+            animal_event: components["schemas"]["AnimalEvent"];
+            animal: components["schemas"]["Animal"];
+        };
         /** AnimalIn */
         AnimalIn: {
             /** Name */
@@ -610,6 +661,21 @@ export interface components {
             status: string | null;
             /** Zoo Id */
             zoo_id: number;
+        };
+        /** AnimalWithEvents */
+        AnimalWithEvents: {
+            animal: components["schemas"]["Animal"];
+            /** Upcoming Events */
+            upcoming_events: components["schemas"]["EventWithDetailsAndComments"][];
+            /** Current Events */
+            current_events: components["schemas"]["EventWithDetailsAndComments"][];
+            /** Past Events */
+            past_events: components["schemas"]["EventWithDetailsAndComments"][];
+            zoo: components["schemas"]["Zoo"];
+            /** Daily Checkout Count */
+            daily_checkout_count: number;
+            /** Daily Checkout Duration */
+            daily_checkout_duration: number;
         };
         /** Body_login_users_login_post */
         Body_login_users_login_post: {
@@ -661,6 +727,32 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** EventComment */
+        EventComment: {
+            /** Comment */
+            comment: string;
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            /** Event Id */
+            event_id?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** EventCommentWithUser */
+        EventCommentWithUser: {
+            comment: components["schemas"]["EventComment"];
+            user: components["schemas"]["UserPublic"];
         };
         /** EventCreate */
         EventCreate: {
@@ -735,6 +827,18 @@ export interface components {
             users: components["schemas"]["UserPublic"][];
             event_type: components["schemas"]["EventType"];
             zoo: components["schemas"]["Zoo"];
+        };
+        /** EventWithDetailsAndComments */
+        EventWithDetailsAndComments: {
+            event: components["schemas"]["Event"];
+            /** Animals */
+            animals: components["schemas"]["AnimalEventWithDetails"][];
+            /** Users */
+            users: components["schemas"]["UserEventWithDetails"][];
+            event_type: components["schemas"]["EventType"];
+            zoo: components["schemas"]["Zoo"];
+            /** Comments */
+            comments: components["schemas"]["EventCommentWithUser"][];
         };
         /** Group */
         Group: {
@@ -840,6 +944,32 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+        };
+        /** UserEvent */
+        UserEvent: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id?: number | null;
+            /** Event Id */
+            event_id?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Assigner Id */
+            assigner_id: number | null;
+        };
+        /** UserEventWithDetails */
+        UserEventWithDetails: {
+            user_event: components["schemas"]["UserEvent"];
+            user: components["schemas"]["UserPublic"];
         };
         /** UserPublic */
         UserPublic: {
@@ -1607,7 +1737,7 @@ export interface operations {
             };
         };
     };
-    get_animal_animals__animal_id__get: {
+    get_animal_animals__animal_id__details_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1624,7 +1754,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Animal"];
+                    "application/json": components["schemas"]["AnimalWithEvents"];
                 };
             };
             /** @description Validation Error */
@@ -1799,7 +1929,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EventIn"];
+                "application/json": components["schemas"]["EventCreate"];
             };
         };
         responses: {
@@ -1809,7 +1939,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Event"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_event_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

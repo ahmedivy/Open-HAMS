@@ -355,9 +355,43 @@ class EventCreate(SQLModel):
     user_ids: list[int]
     checkout_immediately: bool = False
 
+
 class EventWithDetails(SQLModel):
     event: Event
     animals: list[Animal]
     users: list[UserPublic]
     event_type: EventType
     zoo: Zoo
+
+
+class UserEventWithDetails(SQLModel):
+    user_event: UserEvent
+    user: UserPublic
+
+
+class AnimalEventWithDetails(SQLModel):
+    animal_event: AnimalEvent
+    animal: Animal
+
+class EventCommentWithUser(SQLModel):
+    comment: EventComment
+    user: UserPublic
+
+
+class EventWithDetailsAndComments(SQLModel):
+    event: Event
+    animals: list[AnimalEventWithDetails]
+    users: list[UserEventWithDetails]
+    event_type: EventType
+    zoo: Zoo
+    comments: list[EventCommentWithUser]
+
+
+class AnimalWithEvents(SQLModel):
+    animal: Animal
+    upcoming_events: list[EventWithDetailsAndComments]
+    current_events: list[EventWithDetailsAndComments]
+    past_events: list[EventWithDetailsAndComments]
+    zoo: Zoo
+    daily_checkout_count: int
+    daily_checkout_duration: float

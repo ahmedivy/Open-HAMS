@@ -1,14 +1,26 @@
 from datetime import UTC, date, datetime, timedelta
-from time import timezone
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
 from api.deps import CurrentUser, SessionDep
 from db.animals import get_all_animals, get_animal_by_id
 from db.utils import has_permission
-from models import Animal, AnimalEvent, AnimalIn
+from models import (
+    Animal,
+    AnimalEvent,
+    AnimalEventWithDetails,
+    AnimalIn,
+    AnimalWithEvents,
+    Event,
+    EventComment,
+    EventWithDetailsAndComments,
+    UserEvent,
+    UserEventWithDetails,
+    Zoo,
+)
 
 router = APIRouter(prefix="/animals", tags=["Animals"])
 
@@ -93,12 +105,125 @@ async def get_animal_status(session: SessionDep, zoo_id: int | None = None):
     return animal_status
 
 
-@router.get("/{animal_id}")
-async def get_animal(animal_id: int, session: SessionDep) -> Animal:
-    animal = await get_animal_by_id(animal_id, session)
+@router.get("/{animal_id}/details")
+async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
+    query = (
+        select(
+            Animal,
+            func.count(col(AnimalEvent.id)).label("daily_event_count"),
+            func.sum(col(AnimalEvent.duration)).label("daily_event_duration"),
+        )
+        .outerjoin(
+            AnimalEvent,
+            (
+                and_(
+                    col(Animal.id) == col(AnimalEvent.animal_id),
+                    func.DATE(col(AnimalEvent.checked_in)) == date.today(),
+                )
+            ),
+        )
+        .where(Animal.id == animal_id)
+        .group_by(col(Animal.id))
+    )
+    animal = (await session.exec(query)).first()
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
-    return animal
+
+    animal, daily_event_count, daily_event_duration = animal
+
+    zoo = await session.exec(select(Zoo).where(Zoo.id == animal.zoo_id))
+    zoo = zoo.first()
+
+    # convert to hours
+    daily_event_duration = (
+        daily_event_duration / timedelta(hours=1) if daily_event_duration else 0
+    )
+
+    # events
+    events = await session.exec(
+        select(Event).join(AnimalEvent).where(AnimalEvent.animal_id == animal_id)
+    )
+    events = events.all()
+
+    print(list(events))
+
+    event_ids = [event.id for event in events]
+    print("event_ids", event_ids)
+    event_animal_details = await session.exec(
+        select(AnimalEvent)
+        .where(col(AnimalEvent.event_id).in_(event_ids))
+        .options(
+            joinedload(AnimalEvent.animal),  # type: ignore
+        )
+    )
+    event_animal_details = event_animal_details.unique()
+
+    event_user_details = await session.exec(
+        select(UserEvent)
+        .where(col(UserEvent.event_id).in_(event_ids))
+        .options(
+            joinedload(UserEvent.user),  # type: ignore
+        )
+    )
+    event_user_details = event_user_details.unique()
+
+    events_comments = await session.exec(
+        select(EventComment)
+        .where(col(EventComment.event_id).in_(event_ids))
+        .options(
+            joinedload(EventComment.user)  # type: ignore
+        )
+    )
+
+    events_with_details: list[EventWithDetailsAndComments] = []
+    for event in events:
+        event_details = EventWithDetailsAndComments(
+            event=event,
+            animals=[
+                AnimalEventWithDetails(
+                    animal_event=animal_event, animal=animal_event.animal
+                )
+                for animal_event in event_animal_details
+                if animal_event.event_id == event.id
+            ],
+            users=[
+                UserEventWithDetails(user_event=user_event, user=user_event.user)
+                for user_event in event_user_details
+                if user_event.event_id == event.id
+            ],
+            comments=[
+                event_comment
+                for event_comment in events_comments
+                if event_comment.event_id == event.id
+            ],
+            event_type=event.event_type,
+            zoo=event.zoo,
+        )
+        events_with_details.append(event_details)
+
+    # separate events based on current, past, upcoming
+    current_time = datetime.now(UTC)
+    current_events = []
+    past_events = []
+    upcoming_events = []
+
+    for event in events_with_details:
+        if event.event.start_at <= current_time <= event.event.end_at:
+            current_events.append(event)
+        elif event.event.end_at < current_time:
+            past_events.append(event)
+        elif event.event.start_at > current_time:
+            upcoming_events.append(event)
+
+    return AnimalWithEvents(
+        animal=animal,
+        current_events=current_events,
+        past_events=past_events,
+        upcoming_events=upcoming_events,
+        zoo=zoo,  # type: ignore
+        daily_checkout_count=daily_event_count,
+        daily_checkout_duration=daily_event_duration,
+    )
 
 
 @router.post("/")

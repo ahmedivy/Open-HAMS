@@ -1,4 +1,4 @@
-import { Animal } from "@/utils/types";
+import { Animal, AnimalWithEvents } from "@/utils/types";
 import instance from "./axios";
 
 export async function getAnimals() {
@@ -10,6 +10,12 @@ export async function getAnimal(animalId: string) {
   const res = await instance.get(`/animals/${animalId}`);
   if (res.status !== 200) throw new Error(res.data);
   return res.data as Animal;
+}
+
+export async function getAnimalDetails(animalId: string) {
+  const res = await instance.get(`/animals/${animalId}/details`);
+  if (res.status !== 200) throw new Error(res.data);
+  return res.data as AnimalWithEvents;
 }
 
 export type AnimalStatus = {

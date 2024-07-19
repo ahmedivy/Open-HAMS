@@ -1,3 +1,5 @@
+import { formatDate } from "@/utils";
+import { EventWithDetailsAndComments } from "@/utils/types";
 import { useState } from "react";
 import { z } from "zod";
 import { Comment } from "../icons";
@@ -9,29 +11,34 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 
-export function EventCard() {
+export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
   return (
     <Card className="w-full rounded-none border-b p-4 shadow-lg">
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Event Name</h3>
-          <Badge variant={"outline"}>Event Type</Badge>
+          <h3 className="text-sm font-semibold">{data.event.name}</h3>
+          <Badge variant={"outline"}>{data.event_type.name}</Badge>
         </div>
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            June 7th, 2021 - June 8th, 2021
+            {formatDate(data.event.start_at)} - {formatDate(data.event.end_at)}
           </p>
           <p className="text-sm text-muted-foreground">
-            Start Time: <span className="font-semibold">10:00 AM</span> - End
-            Time: <span className="font-semibold">12:00 PM</span>
+            Start Time:{" "}
+            <span className="font-semibold">
+              {new Date(data.event.start_at).toLocaleTimeString()}
+            </span>{" "}
+            - End Time:{" "}
+            <span className="font-semibold">
+              {new Date(data.event.end_at).toLocaleTimeString()}
+            </span>
           </p>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <div className="grid w-full gap-2 rounded-lg bg-model p-4">
             <Label className="text-sm font-light">Description</Label>
             <p className="text-sm">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              {data.event.description}
             </p>
           </div>
           <div className="grid w-full gap-2 rounded-lg bg-model p-4">
@@ -48,7 +55,7 @@ export function EventCard() {
   );
 }
 
-export function CommentsBox() {
+export function CommentsBox({}) {
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState("");
 
@@ -58,7 +65,7 @@ export function CommentsBox() {
 
   const onClick = (e: any) => {
     e.preventDefault();
-    
+
     if (isOpen && comment.length > 0) {
       console.log(comment);
 
