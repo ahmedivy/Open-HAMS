@@ -1,8 +1,10 @@
+import { addComment } from "@/api/event";
 import { formatDate } from "@/utils";
-import { EventWithDetailsAndComments } from "@/utils/types";
-import { useState } from "react";
-import { z } from "zod";
-import { Comment } from "../icons";
+import { Comment, EventWithDetailsAndComments } from "@/utils/types";
+import { useState, useTransition } from "react";
+import { useQueryClient } from "react-query";
+import { toast } from "sonner";
+import { Comment as CommentIcon, Spinner } from "../icons";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -37,9 +39,7 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
         <div className="mt-2 grid grid-cols-2 gap-2">
           <div className="grid w-full gap-2 rounded-lg bg-model p-4">
             <Label className="text-sm font-light">Description</Label>
-            <p className="text-sm">
-              {data.event.description}
-            </p>
+            <p className="text-sm">{data.event.description}</p>
           </div>
           <div className="grid w-full gap-2 rounded-lg bg-model p-4">
             <Label>Description</Label>
@@ -49,26 +49,43 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
             </p>
           </div>
         </div>
-        <CommentsBox />
+        <CommentsBox
+          eventId={data.event.id.toString()}
+          comments={data.comments}
+        />
       </div>
     </Card>
   );
 }
 
-export function CommentsBox({}) {
+export function CommentsBox({
+  eventId,
+  comments,
+}: {
+  eventId: string;
+  comments: Comment[];
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState("");
-
-  const commentSchema = z.object({
-    comment: z.string({ message: "Please enter a comment" }),
-  });
+  const [isLoading, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const onClick = (e: any) => {
     e.preventDefault();
 
     if (isOpen && comment.length > 0) {
-      console.log(comment);
-
+      startTransition(() => {
+        addComment(eventId, comment).then((res) => {
+          if (res.status === 200) {
+            toast.success("Comment added successfully");
+          } else {
+            toast.error(res.data.detail);
+          }
+        });
+        setIsOpen(false);
+        setComment("");
+        queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+      });
       return;
     }
     setIsOpen((prev) => !prev);
@@ -84,9 +101,14 @@ export function CommentsBox({}) {
             size="xs"
             className="font-extralight"
             onClick={onClick}
+            disabled={isLoading}
           >
             {isOpen && comment ? "Submit" : isOpen ? "Cancel" : "Comment"}
-            <Comment className="ml-2 size-5" />
+            {isLoading ? (
+              <Spinner className="ml-2 size-5" />
+            ) : (
+              <CommentIcon className="ml-2 size-5" />
+            )}
           </Button>
         </div>
         {isOpen && (
@@ -106,15 +128,15 @@ export function CommentsBox({}) {
       </form>
 
       <div className="mt-4 grid gap-3">
-        <CommentEntry />
-        <CommentEntry />
-        <CommentEntry />
+        {comments.map((comment) => (
+          <CommentEntry key={comment.comment.id} comment={comment} />
+        ))}
       </div>
     </ScrollArea>
   );
 }
 
-export function CommentEntry() {
+export function CommentEntry({ comment }: { comment: Comment }) {
   return (
     <div className="flex items-center gap-4">
       <Avatar className="size-12">
@@ -122,13 +144,14 @@ export function CommentEntry() {
       </Avatar>
       <div className="grid gap-1">
         <div className="flex items-center gap-2 text-xs">
-          <p>John Doe</p>
-          <span className="font-extralight">June 7th, 2021</span>
+          <p>
+            {comment.user.first_name} {comment.user.last_name}
+          </p>
+          <span className="font-extralight">
+            {formatDate(comment.comment.created_at)}
+          </span>
         </div>
-        <p className="text-sm font-normal">
-          Simba was a hit at the event! He interacted with the guests and seemed
-          to enjoy the attention.
-        </p>
+        <p className="text-sm font-normal">{comment.comment.comment}</p>
       </div>
     </div>
   );

@@ -13,3 +13,4 @@ export type EventWithDetailsAndComments =
   components["schemas"]["EventWithDetailsAndComments"];
 
 export type AnimalWithEvents = components["schemas"]["AnimalWithEvents"];
+export type Comment = components["schemas"]["EventCommentWithUser"];

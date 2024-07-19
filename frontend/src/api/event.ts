@@ -39,3 +39,8 @@ export async function getEventDetails(id: string) {
   const res = await instance.get(`/events/${id}`);
   return res.data as EventWithDetails;
 }
+
+export async function addComment(eventId: string, comment: string) {
+  const res = await instance.post(`/events/${eventId}/comments`, { comment });
+  return res;
+}
