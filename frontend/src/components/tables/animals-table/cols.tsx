@@ -135,7 +135,7 @@ export const animalTableColumns: ColumnDef<Animal>[] = [
   {
     id: "actions",
     cell: ({ row }) => (
-      <Badge variant="secondary" className="font-thin">
+      <Badge variant="secondary" className="font-light">
         <Link to={`/animals/${row.getValue("id")}`}>view</Link>
       </Badge>
     ),
