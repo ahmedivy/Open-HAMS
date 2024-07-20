@@ -35,3 +35,13 @@ export async function getAnimalsWithStatus(zoo_id?: string) {
   );
   return res.data as AnimalStatus[];
 }
+
+export async function makeAnimalUnavailable(animalId: string) {
+  const res = await instance.put(`/animals/${animalId}/unavailable`);
+  return res;
+}
+
+export async function makeAnimalAvailable(animalId: string) {
+  const res = await instance.put(`/animals/${animalId}/available`);
+  return res;
+}

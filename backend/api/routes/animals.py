@@ -1,7 +1,8 @@
 from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import func
+from fastapi.responses import JSONResponse
+from sqlalchemy import JSON, func
 from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
@@ -16,6 +17,7 @@ from models import (
     AnimalWithEvents,
     Event,
     EventComment,
+    EventCommentWithUser,
     EventWithDetailsAndComments,
     UserEvent,
     UserEventWithDetails,
@@ -174,6 +176,7 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
             joinedload(EventComment.user)  # type: ignore
         )
     )
+    events_comments = events_comments.unique()
 
     events_with_details: list[EventWithDetailsAndComments] = []
     for event in events:
@@ -192,7 +195,7 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
                 if user_event.event_id == event.id
             ],
             comments=[
-                event_comment
+                EventCommentWithUser(user=event_comment.user, comment=event_comment)
                 for event_comment in events_comments
                 if event_comment.event_id == event.id
             ],
@@ -280,3 +283,41 @@ async def update_animal(
     await session.commit()
     await session.refresh(animal)
     return animal
+
+
+@router.put("/{animal_id}/unavailable")
+async def mark_animal_unavailable(
+    animal_id: int, session: SessionDep, current_user: CurrentUser
+):
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=401, detail="You are not authorized to perform this action"
+        )
+
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    animal.status = "unavailable"
+    await session.commit()
+    return JSONResponse(
+        content={"message": "Animal marked unavailable"}, status_code=200
+    )
+
+
+@router.put("/{animal_id}/available")
+async def mark_animal_available(
+    animal_id: int, session: SessionDep, current_user: CurrentUser
+):
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=401, detail="You are not authorized to perform this action"
+        )
+
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    animal.status = "checked_in"
+    await session.commit()
+    return JSONResponse(content={"message": "Animal marked available"}, status_code=200)

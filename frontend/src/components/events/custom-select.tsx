@@ -47,6 +47,7 @@ export function CustomSelect({
               onValueChange={onValueChange}
               emptyMessage={`No ${label} found`}
               placeholder={placeholder}
+              onClose={() => setIsOpen(false)}
             />
           </div>
         ) : (

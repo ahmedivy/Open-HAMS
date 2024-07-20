@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
-from shlex import join
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy import JSON, func
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
@@ -14,8 +13,9 @@ from models import (
     Animal,
     AnimalEvent,
     Event,
+    EventComment,
+    EventCommentIn,
     EventCreate,
-    EventIn,
     EventType,
     EventWithDetails,
     User,
@@ -187,6 +187,7 @@ async def update_event(
                 Event.end_at >= body.event.start_at,
                 Event.zoo_id == body.event.zoo_id,
                 col(Animal.id).in_(body.animal_ids),
+                Event.id != event_id,
             )
         )
         .group_by(Animal.name)
@@ -405,20 +406,6 @@ async def remove_animals_from_event(
     return event
 
 
-# @router.get("/{event_id}/animals")
-# async def get_event_animals(event_id: int, session: SessionDep) -> EventWithAnimals:
-#     event = await session.get(Event, event_id)
-#     if not event:
-#         raise HTTPException(status_code=404, detail="Event not found")
-
-#     animals = await session.exec(
-#         select(Animal).join(AnimalEvent).where(AnimalEvent.event_id == event_id)
-#     )
-#     animals = animals.all()
-
-#     return EventWithAnimals(event=event, animals=animals)
-
-
 @router.post("/{event_id}/animal/{animal_id}/check-in")
 async def check_in_animal(
     event_id: int, animal_id: int, session: SessionDep, current_user: CurrentUser
@@ -570,3 +557,26 @@ async def check_out_animal(
     await session.commit()
 
     return {"message": "Animal checked out"}
+
+
+@router.post("/{event_id}/comments")
+async def add_comment_to_event(
+    event_id: int,
+    body: EventCommentIn,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    event = await session.get(Event, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    comment = EventComment(
+        event_id=event_id,
+        user_id=current_user.id,
+        comment=body.comment,
+    )  # type: ignore
+
+    session.add(comment)
+    await session.commit()
+
+    return JSONResponse({"message": "Comment added"}, status_code=200)

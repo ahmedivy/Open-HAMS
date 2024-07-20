@@ -1,6 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Command as CommandPrimitive } from "cmdk";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   CommandGroup,
   CommandInput,
@@ -24,6 +30,7 @@ type AutoCompleteProps = {
   isLoading?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  onClose?: () => void;
 };
 
 export const AutoComplete = ({
@@ -33,6 +40,7 @@ export const AutoComplete = ({
   value,
   onValueChange,
   disabled,
+  onClose,
   isLoading = false,
 }: AutoCompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +81,7 @@ export const AutoComplete = ({
 
       if (event.key === "Escape") {
         input.blur();
+        onClose?.();
       }
     },
     [isOpen, options, onValueChange],
@@ -110,7 +119,6 @@ export const AutoComplete = ({
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
-
           className="text-base"
         />
       </div>

@@ -1,19 +1,26 @@
-import { useAnimal } from "@/api/queries";
+import { makeAnimalAvailable, makeAnimalUnavailable } from "@/api/animals";
+import { useAnimal, useUser } from "@/api/queries";
 import { EventsList } from "@/components/events/events-list";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDetails, CardHeading } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/routes/loading";
 import { cn, formatDate } from "@/utils";
+import { useState } from "react";
+import { useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export function AnimalDetailsPage() {
   const { id } = useParams();
   if (!id) return null;
 
+  const { data: user, isLoading: isUserLoading } = useUser();
   const { data, isLoading } = useAnimal(id);
-  if (isLoading) return <Loading />;
+
+  if (isLoading || isUserLoading) return <Loading />;
   if (!data) throw new Error("Animal not found");
 
   return (
@@ -48,6 +55,12 @@ export function AnimalDetailsPage() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Feature title="Zoo ID - Belong To" details="Hoggle Zoo" />
+              {user?.role?.name === "admin" && (
+                <AnimalAvailabilitySwitch
+                  status={data.animal.status!}
+                  animalId={data.animal.id.toString()}
+                />
+              )}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Feature title="Description" details={data.animal.description!} />
@@ -205,6 +218,52 @@ function Feature(props: {
         {props.title}
       </h2>
       <p className="text-sm leading-relaxed">{props.details}</p>
+    </div>
+  );
+}
+
+function AnimalAvailabilitySwitch({
+  status,
+  animalId,
+}: {
+  status: string;
+  animalId: string;
+}) {
+  const [checked, setChecked] = useState(status === "unavailable");
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const handleChange = async (checked: boolean) => {
+    setChecked(checked);
+    setLoading(true);
+
+    let res;
+    if (checked) {
+      res = await makeAnimalUnavailable(animalId);
+    } else {
+      res = await makeAnimalAvailable(animalId);
+    }
+
+    if (res.status === 200) {
+      toast.success(res.data.message);
+    } else {
+      toast.error(res.data.detail);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["animal", animalId] });
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="text-sm font-extralight text-muted-foreground">
+        Mark Unavailable
+      </h2>
+      <Switch
+        onCheckedChange={handleChange}
+        checked={checked}
+        disabled={loading}
+        className="self-end"
+      />
     </div>
   );
 }

@@ -12,8 +12,17 @@ import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
+import { AnimalsSelect } from "./animals-select";
+import { HandlerSelect } from "./handlers-select";
 
 export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
+  const [selectedHandlers, setSelectedHandlers] = useState<string[]>(
+    data.users.map(({ user }) => user.id.toString()),
+  );
+  const [selectedAnimals, setSelectedAnimals] = useState<string[]>(
+    data.animals.map(({ animal }) => animal.id.toString()),
+  );
+
   return (
     <Card className="w-full rounded-none border-b p-4 shadow-lg">
       <div className="grid gap-2">
@@ -42,11 +51,17 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
             <p className="text-sm">{data.event.description}</p>
           </div>
           <div className="grid w-full gap-2 rounded-lg bg-model p-4">
-            <Label>Description</Label>
-            <p className="text-sm text-muted-foreground">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
+            <HandlerSelect
+              selectedHandlers={selectedHandlers}
+              setSelectedHandlers={setSelectedHandlers}
+            />
+            <div className="flex w-full items-center justify-between gap-3">
+              <AnimalsSelect
+                selectedAnimals={selectedAnimals}
+                setSelectedAnimals={setSelectedAnimals}
+              />
+              <Button size="sm">Save</Button>
+            </div>
           </div>
         </div>
         <CommentsBox
