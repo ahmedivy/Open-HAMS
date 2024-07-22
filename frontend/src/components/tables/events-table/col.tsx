@@ -42,7 +42,7 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("description")}</span>
+          <span className="truncate max-w-48">{row.getValue("description") as string}</span>
         </div>
       );
     },

@@ -1,10 +1,16 @@
 import { addComment } from "@/api/event";
-import { formatDate } from "@/utils";
-import { Comment, EventWithDetailsAndComments } from "@/utils/types";
+import { useAnimalStatus } from "@/api/queries";
+import { arraysEqual, formatDate, formatTime } from "@/utils";
+import {
+  AnimalEventWithDetails,
+  Comment,
+  EventWithDetailsAndComments,
+} from "@/utils/types";
+import { CheckCircle, ChevronRight, Minus, XCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useQueryClient } from "react-query";
 import { toast } from "sonner";
-import { Comment as CommentIcon, Spinner } from "../icons";
+import { Comment as CommentIcon, LoadingDots, Spinner } from "../icons";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -13,6 +19,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import { AnimalsSelect } from "./animals-select";
+import { AvatarWithTooltip } from "./avatar-with-tooltip";
 import { HandlerSelect } from "./handlers-select";
 
 export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
@@ -22,6 +29,27 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
   const [selectedAnimals, setSelectedAnimals] = useState<string[]>(
     data.animals.map(({ animal }) => animal.id.toString()),
   );
+
+  const [animalView, setAnimalView] = useState<
+    "assign" | "check_in" | "check_out"
+  >("assign");
+
+  const handlers = data.users.map(({ user }) => user.id.toString());
+  const animals = data.animals.map(({ animal }) => animal.id.toString());
+
+  async function reAssignAnimals() {
+    const animalIds = selectedAnimals.map((id) => parseInt(id));
+
+    // const res = await reAssignAnimalsToEvent(data.event.id, animalIds);
+  }
+
+  async function reAssignHandlers() {
+    const handlerIds = selectedHandlers.map((id) => parseInt(id));
+
+    // const res = await reAssignHandlersToEvent(data.event.id, handlerIds);
+  }
+
+  const isEventStarted = new Date(data.event.start_at) < new Date();
 
   return (
     <Card className="w-full rounded-none border-b p-4 shadow-lg">
@@ -50,17 +78,68 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
             <Label className="text-sm font-light">Description</Label>
             <p className="text-sm">{data.event.description}</p>
           </div>
-          <div className="grid w-full gap-2 rounded-lg bg-model p-4">
-            <HandlerSelect
-              selectedHandlers={selectedHandlers}
-              setSelectedHandlers={setSelectedHandlers}
-            />
-            <div className="flex w-full items-center justify-between gap-3">
-              <AnimalsSelect
-                selectedAnimals={selectedAnimals}
-                setSelectedAnimals={setSelectedAnimals}
+          <div className="grid h-full w-full gap-2 overflow-auto rounded-lg bg-model p-4">
+            <div className="flex w-full items-end justify-between gap-3">
+              <HandlerSelect
+                selectedHandlers={selectedHandlers}
+                setSelectedHandlers={setSelectedHandlers}
               />
-              <Button size="sm">Save</Button>
+              {
+                // if selected handlers changed show save button
+                !arraysEqual(selectedHandlers, handlers) ? (
+                  <Button size="xs" className="py-0">
+                    Save
+                  </Button>
+                ) : null
+              }
+            </div>
+            <div className="flex w-full items-end justify-between gap-3">
+              {animalView === "assign" && (
+                <>
+                  <AnimalsSelect
+                    selectedAnimals={selectedAnimals}
+                    setSelectedAnimals={setSelectedAnimals}
+                    animalsDetails={data.animals}
+                  />
+                  {
+                    // if selected animals changed show save button
+                    !arraysEqual(selectedAnimals, animals) ? (
+                      <Button size="xs" className="py-0 font-light">
+                        Save
+                      </Button>
+                    ) : (
+                      <Button
+                        size="xs"
+                        className="leading-0 justify-between py-0"
+                        onClick={() => setAnimalView("check_in")}
+                      >
+                        {isEventStarted ? "Check In" : "Check Out"}
+                        <ChevronRight className="ml-2 size-4" />
+                      </Button>
+                    )
+                  }
+                </>
+              )}
+              {animalView === "check_in" && (
+                <>
+                  <AnimalCheckInOut
+                    eventId={data.event.id.toString()}
+                    mode="check_in"
+                    animalsDetails={data.animals}
+                    setView={setAnimalView}
+                  />
+                </>
+              )}
+              {animalView === "check_out" && (
+                <>
+                  <AnimalCheckInOut
+                    eventId={data.event.id.toString()}
+                    mode="check_out"
+                    animalsDetails={data.animals}
+                    setView={setAnimalView}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -70,6 +149,124 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
         />
       </div>
     </Card>
+  );
+}
+
+function AnimalCheckInOut(props: {
+  eventId: string;
+  mode: "check_in" | "check_out";
+  animalsDetails: AnimalEventWithDetails[];
+  setView?: (view: "assign" | "check_in" | "check_out") => void;
+}) {
+  const [selected, setSelected] = useState<string[]>([]);
+  const { data: animalsStatus, isLoading } = useAnimalStatus();
+  if (isLoading) return <LoadingDots className="size-4" />;
+
+  return (
+    <div className="flex w-full items-end justify-between gap-3">
+      <div className="grid">
+        <Label className="text-sm font-light">Animals</Label>
+        <div className="flex h-12 flex-wrap items-center gap-2">
+          <Minus className="size-5 text-red-500" />
+          {props.animalsDetails.map((animalDetails) => {
+            const animalStatus = animalsStatus?.find(
+              (status) => status.animal.id === animalDetails.animal.id,
+            );
+
+            return (
+              <AvatarWithTooltip
+                src="/placeholder-avatar.png"
+                className="cursor-pointer"
+                isSelected={selected.includes(
+                  animalDetails.animal.id.toString(),
+                )}
+                onClick={() =>
+                  setSelected(
+                    selected.includes(animalDetails.animal.id.toString())
+                      ? selected.filter(
+                          (id) => id !== animalDetails.animal.id.toString(),
+                        )
+                      : [...selected, animalDetails.animal.id.toString()],
+                  )
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <Avatar className="size-8">
+                    <AvatarImage src="/placeholder-avatar.png" />
+                  </Avatar>
+                  <span className="text-md font-semibold">
+                    {animalDetails?.animal.name}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs font-light">
+                    Checkout for Event:
+                  </Label>
+                  {animalDetails.animal_event.checked_out ? (
+                    <p>
+                      {formatDate(animalDetails.animal_event.checked_out)} -
+                      {formatTime(animalDetails.animal_event.checked_out)}
+                    </p>
+                  ) : (
+                    <p>N/A</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs font-light">
+                    Checkin for Event:
+                  </Label>
+                  {animalDetails.animal_event.checked_in ? (
+                    <p>
+                      {`${formatDate(animalDetails.animal_event.checked_in)}`}-
+                      {formatTime(animalDetails.animal_event.checked_in)}
+                    </p>
+                  ) : (
+                    <p>N/A</p>
+                  )}
+                </div>
+
+                <div className="my-2">
+                  {animalStatus?.status === "available" ? (
+                    <div className="grid gap-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="size-4 text-green-500" />
+                        <span className="text-sm">Available</span>
+                      </div>
+                      <p>{animalStatus?.status_description}</p>
+                    </div>
+                  ) : animalStatus?.status === "unavailable" ? (
+                    <div className="grid gap-2">
+                      <div className="flex items-center gap-2">
+                        <XCircle className="size-4 text-red-500" />
+                        <span className="text-sm">Unavailable</span>
+                      </div>
+                      <p>{animalStatus?.status_description}</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-2">
+                      <div className="flex items-center gap-2">
+                        <XCircle className="size-4" />
+                        <span className="text-sm">Checked Out</span>
+                      </div>
+                      <p>{animalStatus?.status_description}</p>
+                    </div>
+                  )}
+                </div>
+              </AvatarWithTooltip>
+            );
+          })}
+        </div>
+      </div>
+      <Button
+        size="xs"
+        className="py-0"
+        onClick={() => props.setView?.("assign")}
+      >
+        Cancel
+      </Button>
+    </div>
   );
 }
 

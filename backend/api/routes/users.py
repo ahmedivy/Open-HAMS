@@ -47,7 +47,7 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=30)
+    access_token_expires = timedelta(minutes=24 * 60 * 30)  # 30 days
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
@@ -64,7 +64,7 @@ async def get_users(session: SessionDep):
 @router.get("/handlers")
 async def get_handlers(session: SessionDep) -> list[UserWithDetails]:
     handlers = (await session.exec(select(User).where(User.role_id == 2))).unique()
-    return list(handlers) # type: ignore
+    return list(handlers)  # type: ignore
 
 
 @router.delete("/")

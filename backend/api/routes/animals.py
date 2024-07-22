@@ -147,8 +147,6 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
     )
     events = events.all()
 
-    print(list(events))
-
     event_ids = [event.id for event in events]
     print("event_ids", event_ids)
     event_animal_details = await session.exec(
@@ -158,7 +156,7 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
             joinedload(AnimalEvent.animal),  # type: ignore
         )
     )
-    event_animal_details = event_animal_details.unique()
+    event_animal_details = list(event_animal_details.unique())
 
     event_user_details = await session.exec(
         select(UserEvent)
@@ -167,7 +165,7 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
             joinedload(UserEvent.user),  # type: ignore
         )
     )
-    event_user_details = event_user_details.unique()
+    event_user_details = list(event_user_details.unique())
 
     events_comments = await session.exec(
         select(EventComment)
@@ -176,7 +174,7 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
             joinedload(EventComment.user)  # type: ignore
         )
     )
-    events_comments = events_comments.unique()
+    events_comments = list(events_comments.unique())
 
     events_with_details: list[EventWithDetailsAndComments] = []
     for event in events:

@@ -3,6 +3,7 @@ import { useUser } from "@/api/queries";
 import { cn } from "@/utils";
 import {
   Activity,
+  Calendar,
   Dog,
   EllipsisVertical,
   LayoutDashboard,
@@ -43,7 +44,7 @@ export function Sidebar() {
       },
       {
         title: "Events",
-        icon: Activity,
+        icon: Calendar,
         path: "/events",
         active: location.pathname.startsWith("/events"),
       },

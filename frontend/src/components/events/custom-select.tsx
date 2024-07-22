@@ -37,7 +37,7 @@ export function CustomSelect({
 
   return (
     <div className="grid">
-      <Label className="text-sm">{label}</Label>
+      <Label className="text-sm font-light">{label}</Label>
       <div className="flex items-center gap-2">
         {isOpen ? (
           <div className="flex h-12 w-full items-center gap-3">
@@ -51,7 +51,7 @@ export function CustomSelect({
             />
           </div>
         ) : (
-          <div className="flex h-12 items-center gap-2">
+          <div className="flex h-12 items-center gap-2 flex-wrap">
             <Plus
               className="size-5 cursor-pointer"
               onClick={() => setIsOpen(true)}

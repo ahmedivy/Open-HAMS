@@ -2,7 +2,8 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy import func
+from pydantic import BaseModel
+from sqlalchemy import delete, func
 from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
@@ -319,12 +320,16 @@ async def read_event(event_id: int, session: SessionDep) -> EventWithDetails:
     )
 
 
-@router.post("/{event_id}/assign-animals")
+class AssignAnimalsIn(BaseModel):
+    animal_ids: list[int]
+
+
+@router.put("/{event_id}/assign-animals")
 async def assign_animals_to_event(
     event_id: int,
     session: SessionDep,
     current_user: CurrentUser,
-    animal_ids: list[int] = Body(...),
+    body: AssignAnimalsIn,
 ):
     if not has_permission(current_user.role.permissions, "manage_events"):
         raise HTTPException(
@@ -336,26 +341,73 @@ async def assign_animals_to_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    animals = await session.exec(select(Animal).where(col(Animal.id).in_(animal_ids)))
+    animals = await session.exec(
+        select(Animal).where(col(Animal.id).in_(body.animal_ids))
+    )
     animals = animals.all()
 
-    if not animals:
-        raise HTTPException(status_code=404, detail="No animals found")
+    if not (len(animals) == len(body.animal_ids)):
+        raise HTTPException(status_code=404, detail="Animal not found")
 
-    for animal in animals:
-        # create a link between the animal and the event
-        event_animal_link = AnimalEvent(animal_id=animal.id, event_id=event_id)  # type: ignore
-        session.add(event_animal_link)
+    # check if animals are already assigned to an event during this time
+    clashing_animals = await session.exec(
+        select(Animal.name)
+        .join(AnimalEvent)
+        .join(Event)
+        .where(
+            and_(
+                Event.start_at <= event.end_at,
+                Event.end_at >= event.start_at,
+                Event.zoo_id == event.zoo_id,
+                col(Animal.id).in_(body.animal_ids),
+                Event.id != event_id,
+            )
+        )
+        .group_by(Animal.name)
+    )
+    clashing_animals = clashing_animals.all()
+    if clashing_animals:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Some animals are already assigned to an event during this time: {", ".join([animal for animal in clashing_animals])}',
+        )
 
-        # log the activity
-        log = f"Animal {animal.id} assigned to event {event_id}"
-        await log_activity(animal.id, log, session)
+    # already assigned animals
+    assigned_animals = await session.exec(
+        select(Animal).join(AnimalEvent).where(AnimalEvent.event_id == event_id)
+    )
+    assigned_animals = assigned_animals.all()
 
-    session.add(event)
+    # to remove animals
+    to_remove_animal_ids = [
+        animal.id for animal in assigned_animals if animal.id not in body.animal_ids
+    ]
+    
+    for animal_id in to_remove_animal_ids:
+        event_animal_link = await session.exec(
+            select(AnimalEvent).where(
+                AnimalEvent.animal_id == animal_id, AnimalEvent.event_id == event_id
+            )
+        )
+        event_animal_link = event_animal_link.first()
+        await session.delete(event_animal_link)
+
+    # to add animals
+    to_add_animal_ids = [
+        animal_id for animal_id in body.animal_ids if animal_id not in [animal.id for animal in assigned_animals]
+    ]
+
+    for animal_id in to_add_animal_ids:
+        animal_link = AnimalEvent(animal_id=animal_id, event_id=event_id) # type: ignore
+        session.add(animal_link)
+
     await session.commit()
     await session.refresh(event)
 
-    return event
+
+
+
+    return {"message": "Animals assigned to event"}
 
 
 @router.post("/{event_id}/remove-animals")
