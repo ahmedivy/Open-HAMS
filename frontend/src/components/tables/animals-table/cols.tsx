@@ -1,8 +1,8 @@
+import { AnimalModel } from "@/components/models/animal-model";
+import { Button } from "@/components/ui/button";
 import { Animal } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import { Badge } from "../../ui/badge";
 import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 export const animalTableColumns: ColumnDef<Animal>[] = [
@@ -53,19 +53,6 @@ export const animalTableColumns: ColumnDef<Animal>[] = [
       return (
         <div className="flex items-center">
           <span>{row.getValue("species")}</span>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "kind",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Kind" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue("kind")}</span>
         </div>
       );
     },
@@ -134,10 +121,19 @@ export const animalTableColumns: ColumnDef<Animal>[] = [
   },
   {
     id: "actions",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
     cell: ({ row }) => (
-      <Badge variant="secondary" className="font-light">
-        <Link to={`/animals/${row.getValue("id")}`}>view</Link>
-      </Badge>
+      <AnimalModel mode="edit" animalId={row.getValue("id")}>
+        <Button
+          variant="secondary"
+          className="rounded-full font-light"
+          size="xs"
+        >
+          edit
+        </Button>
+      </AnimalModel>
     ),
   },
 ];

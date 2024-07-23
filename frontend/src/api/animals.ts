@@ -1,4 +1,8 @@
-import { Animal, AnimalWithEvents } from "@/utils/types";
+import {
+  Animal,
+  AnimalAuditWithDetails,
+  AnimalWithEvents,
+} from "@/utils/types";
 import instance from "./axios";
 import { AnimalSchema } from "./schemas/animal";
 
@@ -55,4 +59,9 @@ export async function makeAnimalUnavailable(animalId: string) {
 export async function makeAnimalAvailable(animalId: string) {
   const res = await instance.put(`/animals/${animalId}/available`);
   return res;
+}
+
+export async function getAnimalAuditLog(animalId: string) {
+const res = await instance.get(`/animals/${animalId}/audits`);
+  return res.data as AnimalAuditWithDetails[];
 }

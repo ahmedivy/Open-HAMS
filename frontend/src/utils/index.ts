@@ -59,3 +59,7 @@ export function timeSince(data: string) {
   }
   return "Just now";
 }
+
+export function snakeToCapitalized(str: string) {
+  return str.replace(/(_\w)/g, (m) => m[1].toUpperCase());
+}

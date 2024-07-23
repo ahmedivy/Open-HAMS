@@ -4,6 +4,7 @@ import { useQuery } from "react-query";
 import type { AnimalStatus } from "@/api/animals";
 import {
   getAnimal,
+  getAnimalAuditLog,
   getAnimalDetails,
   getAnimalsWithStatus,
 } from "@/api/animals";
@@ -12,6 +13,7 @@ import { getAuthenticatedUser, getHandlers } from "@/api/user";
 import { getZoos } from "@/api/zoo";
 import {
   Animal,
+  AnimalAuditWithDetails,
   AnimalWithEvents,
   EventWithDetails,
   Group,
@@ -99,5 +101,12 @@ export function useEvent(eventId: string) {
     queryKey: ["event", eventId],
     queryFn: () => getEventDetails(eventId),
     refetchOnMount: true,
+  });
+}
+
+export function useAnimalAuditLog(animalId: string) {
+  return useQuery<AnimalAuditWithDetails[]>({
+    queryKey: ["animal-audit", animalId],
+    queryFn: () => getAnimalAuditLog(animalId),
   });
 }

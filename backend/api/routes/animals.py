@@ -109,8 +109,16 @@ async def get_animal_status(session: SessionDep, zoo_id: int | None = None):
     return animal_status
 
 
+@router.get("/{animal_id}")
+async def get_animal(animal_id: int, session: SessionDep) -> Animal:
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+    return animal
+
+
 @router.get("/{animal_id}/details")
-async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
+async def get_animal_details(animal_id: int, session: SessionDep) -> AnimalWithEvents:
     query = (
         select(
             Animal,
@@ -286,7 +294,7 @@ async def update_animal(
     animal_update: AnimalIn,
     session: SessionDep,
     current_user: CurrentUser,
-) -> Animal:
+):
     if not has_permission(current_user.role.permissions, "manage_animals"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
@@ -304,7 +312,7 @@ async def update_animal(
 
     await session.commit()
     await session.refresh(animal)
-    return animal
+    return JSONResponse(content={"message": "Animal updated"}, status_code=200)
 
 
 @router.put("/{animal_id}/unavailable")
@@ -345,7 +353,7 @@ async def mark_animal_available(
     return JSONResponse(content={"message": "Animal marked available"}, status_code=200)
 
 
-@router.put("/{animal_id}/audits")
+@router.get("/{animal_id}/audits")
 async def get_animal_audits(
     animal_id: int, session: SessionDep
 ) -> list[AnimalAuditWithDetails]:

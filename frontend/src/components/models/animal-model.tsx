@@ -6,8 +6,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { createAnimal, updateAnimal } from "@/api/animals";
-import { useAnimal, useZoos } from "@/api/queries";
+import { createAnimal, getAnimal, updateAnimal } from "@/api/animals";
+import { useZoos } from "@/api/queries";
 import { animalSchema, AnimalSchema } from "@/api/schemas/animal";
 import { tiers } from "@/api/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,34 +42,80 @@ export function AnimalModel(props: {
   children: React.ReactNode;
   animalId?: string;
 }) {
-  const { data: zoos, isLoading } = useZoos();
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { data: animal, isLoading: isAnimalLoading } = useAnimal(
-    props.animalId!,
-  );
-  const form = useForm<AnimalSchema>({
-    resolver: zodResolver(animalSchema),
-    defaultValues:
-      props.mode === "edit"
-        ? {
-            name: animal?.name!,
-            species: animal?.species!,
-            image: animal?.image!,
-            max_daily_checkouts: animal?.max_daily_checkouts!,
-            max_daily_checkout_hours: animal?.max_daily_checkout_hours!,
-            rest_time: animal?.rest_time!,
-            description: animal?.description!,
-            tier: animal?.tier!.toString(),
-            handling_enabled: animal?.handling_enabled!,
-            zoo_id: animal?.zoo_id?.toString(),
-          }
-        : {},
-  });
-
   if (props.mode === "edit" && !props.animalId) return null;
 
-  if (isLoading || isAnimalLoading) return <LoadingDots />;
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild onClick={(e) => {
+        setOpen(true);
+        e.stopPropagation();
+      }}>
+        {props.children}
+      </DialogTrigger>
+      <DialogContent className="bg-model">
+        <DialogTitle className="text-center font-light">
+          {
+            {
+              add: "Add",
+              edit: "Edit",
+            }[props.mode]
+          }{" "}
+          Animal Details
+        </DialogTitle>
+        <ScrollArea className="h-[700px]">
+          <AnimalForm {...props} setOpen={setOpen} />
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function AnimalForm(props: {
+  mode: "add" | "edit";
+  children: React.ReactNode;
+  animalId?: string;
+  setOpen: (open: boolean) => void;
+}) {
+  const { data: zoos, isLoading } = useZoos();
+  const queryClient = useQueryClient();
+
+  const form = useForm<AnimalSchema>({
+    resolver: zodResolver(animalSchema),
+    defaultValues: async () => {
+      if (props.mode === "add")
+        return {
+          name: "",
+          species: "",
+          image: "",
+          max_daily_checkouts: 0,
+          max_daily_checkout_hours: 0,
+          rest_time: 0,
+          description: "",
+          tier: "1",
+          handling_enabled: false,
+          zoo_id: "",
+        };
+      const res = await getAnimal(props.animalId!);
+
+      return {
+        name: res.name,
+        species: res.species,
+        image: res.image!,
+        max_daily_checkouts: res.max_daily_checkouts,
+        max_daily_checkout_hours: res.max_daily_checkout_hours,
+        rest_time: res.rest_time,
+        description: res.description!,
+        tier: res.tier.toString(),
+        handling_enabled: res.handling_enabled,
+        zoo_id: res.zoo_id?.toString(),
+      };
+    },
+  });
+
+  if (isLoading || form.formState.isLoading) return <LoadingDots />;
+
+  if (props.mode === "edit" && !props.animalId) return null;
 
   async function onSubmit(values: AnimalSchema) {
     console.log(values);
@@ -90,239 +136,212 @@ export function AnimalModel(props: {
         queryClient.invalidateQueries(["animal_details", props.animalId!]);
       }
 
-      setOpen(false);
+      props.setOpen(false);
     } else {
       toast.error(res.data.detail);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{props.children}</DialogTrigger>
-      <DialogContent className="bg-model">
-        <DialogTitle className="text-center font-light">
-          {
-            {
-              add: "Add",
-              edit: "Edit",
-            }[props.mode]
-          }{" "}
-          Animal Details
-        </DialogTitle>
-        <ScrollArea className="h-[700px]">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 px-1"
-            >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter the animal's name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="species"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Species</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter the species" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        // type="file"
-                        placeholder="Enter image url"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="max_daily_checkouts"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maximum Daily Checkouts</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        placeholder="Enter the maximum number of daily checkouts"
-                        onChange={(event) =>
-                          field.onChange(+event.target.value)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="max_daily_checkout_hours"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maximum Daily Checkout Hours</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        placeholder="Enter the maximum number of daily checkout hours"
-                        onChange={(event) =>
-                          field.onChange(+event.target.value)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="rest_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rest Time (hours)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        placeholder="Enter the required rest time after an event"
-                        onChange={(event) =>
-                          field.onChange(+event.target.value)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Enter a brief description of the animal"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Enter the animal's name" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="species"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Species</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Enter the species" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  // type="file"
+                  placeholder="Enter image url"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="max_daily_checkouts"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Maximum Daily Checkouts</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  placeholder="Enter the maximum number of daily checkouts"
+                  onChange={(event) => field.onChange(+event.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="max_daily_checkout_hours"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Maximum Daily Checkout Hours</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  placeholder="Enter the maximum number of daily checkout hours"
+                  onChange={(event) => field.onChange(+event.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="rest_time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Rest Time (hours)</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  placeholder="Enter the required rest time after an event"
+                  onChange={(event) => field.onChange(+event.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Enter a brief description of the animal"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="tier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Handling Difficulty Tier</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value as any as string}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Tier" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tiers.map((tier) => (
-                          <SelectItem key={tier.value} value={tier.value}>
-                            {tier.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="handling_enabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Handling Enabled</FormLabel>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="zoo_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zoo</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value as any as string}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Select Zoo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {zoos?.map((zoo) => (
-                          <SelectItem key={zoo.id} value={zoo.id.toString()}>
-                            {zoo.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="tier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Handling Difficulty Tier</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value as any as string}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Tier" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {tiers.map((tier) => (
+                    <SelectItem key={tier.value} value={tier.value}>
+                      {tier.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="handling_enabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Handling Enabled</FormLabel>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="zoo_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Zoo</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value as any as string}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Select Zoo" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {zoos?.map((zoo) => (
+                    <SelectItem key={zoo.id} value={zoo.id.toString()}>
+                      {zoo.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <div className="flex w-full items-center justify-center gap-3">
-                <DialogClose asChild>
-                  <Button variant="ghost" type="button">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting && (
-                    <Spinner className="mr-2 size-4" />
-                  )}
-                  Save
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        <div className="flex w-full items-center justify-center gap-3">
+          <DialogClose asChild>
+            <Button variant="ghost" type="button">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting && <Spinner className="mr-2 size-4" />}
+            Save
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

@@ -1,6 +1,8 @@
 import { makeAnimalAvailable, makeAnimalUnavailable } from "@/api/animals";
-import { useAnimalDetails, useUser } from "@/api/queries";
+import { useAnimalAuditLog, useAnimalDetails, useUser } from "@/api/queries";
 import { EventsList } from "@/components/events/events-list";
+import { animalAuditTableColumns } from "@/components/tables/animal-audit-table/cols";
+import { DataTable } from "@/components/tables/table-commons/data-table";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDetails, CardHeading } from "@/components/ui/card";
@@ -177,14 +179,7 @@ export function AnimalDetailsPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="audit-log">
-            {/* <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <h2 className="mb-4 text-2xl font-semibold">User Management</h2>
-            <DataTable
-              data={userData}
-              columns={userManagementColumns}
-              toolbar={UserManagementToolbar}
-            />
-          </div> */}
+            <AnimalAuditTabls animalId={id} />
           </TabsContent>
           <TabsContent value="health-log">
             {/* <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
@@ -218,6 +213,19 @@ function Feature(props: {
         {props.title}
       </h2>
       <p className="text-sm leading-relaxed">{props.details}</p>
+    </div>
+  );
+}
+
+function AnimalAuditTabls({ animalId }: { animalId: string }) {
+  const { data, isLoading } = useAnimalAuditLog(animalId);
+  if (isLoading) return <Loading />;
+  if (!data) return <div>No Audit Log</div>;
+
+  return (
+    <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
+      <h2 className="mb-4 text-2xl font-semibold">Animal Audit Log</h2>
+      <DataTable data={data} columns={animalAuditTableColumns} />
     </div>
   );
 }

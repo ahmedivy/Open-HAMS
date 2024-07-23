@@ -44,7 +44,12 @@ export function AnimalsPage() {
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Animals</h2>
         {/* @ts-ignore */}
-        <DataTable data={animals!} columns={animalTableColumns} Toolbar={AnimalTableToolbar} />
+        <DataTable
+          data={animals!}
+          columns={animalTableColumns}
+          Toolbar={AnimalTableToolbar as any}
+          rowHref={(row) => `/animals/${row.original.id}`}
+        />
       </div>
     </>
   );

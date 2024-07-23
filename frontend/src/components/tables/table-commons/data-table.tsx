@@ -1,6 +1,7 @@
 import {
   ColumnDef,
   ColumnFiltersState,
+  Row,
   SortingState,
   VisibilityState,
   flexRender,
@@ -23,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { useNavigate } from "react-router-dom";
 import { DataTableToolbar } from "../user-management/user-management-toolbar";
 import { DataTablePagination } from "./pagination";
 
@@ -30,12 +32,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   Toolbar?: React.ReactNode;
+  rowHref?: (row: Row<TData>) => string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   Toolbar,
+  rowHref,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -44,6 +48,7 @@ export function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const navigate = useNavigate();
 
   const table = useReactTable({
     data,
@@ -100,15 +105,37 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    // check if cell is named actions
+                    if (cell.column.id !== "actions") {
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          onClick={(e) => {
+                            if (rowHref) {
+                              navigate(rowHref(row));
+                            }
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      );
+                    } else {
+                      return (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      );
+                    }
+                  })}
                 </TableRow>
               ))
             ) : (
