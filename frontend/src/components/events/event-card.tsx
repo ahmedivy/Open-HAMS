@@ -1,4 +1,10 @@
-import { addComment } from "@/api/event";
+import {
+  addComment,
+  checkinAnimals,
+  checkoutAnimals,
+  reAssignAnimalsToEvent,
+  reAssignHandlersToEvent,
+} from "@/api/event";
 import { useAnimalStatus } from "@/api/queries";
 import { arraysEqual, formatDate, formatTime } from "@/utils";
 import {
@@ -33,6 +39,7 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
   const [animalView, setAnimalView] = useState<
     "assign" | "check_in" | "check_out"
   >("assign");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlers = data.users.map(({ user }) => user.id.toString());
   const animals = data.animals.map(({ animal }) => animal.id.toString());
@@ -40,13 +47,35 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
   async function reAssignAnimals() {
     const animalIds = selectedAnimals.map((id) => parseInt(id));
 
-    // const res = await reAssignAnimalsToEvent(data.event.id, animalIds);
+    setIsLoading(true);
+    const res = await reAssignAnimalsToEvent(
+      data.event.id.toString(),
+      animalIds.map((id) => id.toString()),
+    );
+
+    if (res.status === 200) {
+      toast.success(res.data.message);
+    } else {
+      toast.error(res.data.detail);
+    }
+    setIsLoading(false);
   }
 
   async function reAssignHandlers() {
     const handlerIds = selectedHandlers.map((id) => parseInt(id));
 
-    // const res = await reAssignHandlersToEvent(data.event.id, handlerIds);
+    setIsLoading(true);
+    const res = await reAssignHandlersToEvent(
+      data.event.id.toString(),
+      handlerIds.map((id) => id.toString()),
+    );
+
+    if (res.status === 200) {
+      toast.success(res.data.message);
+    } else {
+      toast.error(res.data.detail);
+    }
+    setIsLoading(false);
   }
 
   const isEventStarted = new Date(data.event.start_at) < new Date();
@@ -111,7 +140,11 @@ export function EventCard({ data }: { data: EventWithDetailsAndComments }) {
                       <Button
                         size="xs"
                         className="leading-0 justify-between py-0"
-                        onClick={() => setAnimalView("check_in")}
+                        onClick={() =>
+                          setAnimalView(
+                            isEventStarted ? "check_in" : "check_out",
+                          )
+                        }
                       >
                         {isEventStarted ? "Check In" : "Check Out"}
                         <ChevronRight className="ml-2 size-4" />
@@ -159,8 +192,27 @@ function AnimalCheckInOut(props: {
   setView?: (view: "assign" | "check_in" | "check_out") => void;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const { data: animalsStatus, isLoading } = useAnimalStatus();
   if (isLoading) return <LoadingDots className="size-4" />;
+
+  async function handleSubmit() {
+    setLoading(true);
+
+    var res;
+    if (props.mode === "check_in") {
+      res = await checkinAnimals(props.eventId, selected);
+    } else {
+      res = await checkoutAnimals(props.eventId, selected);
+    }
+
+    if (res.status === 200) {
+      toast.success(res.data.message);
+    } else {
+      toast.error(res.data.detail);
+    }
+    setLoading(false);
+  }
 
   return (
     <div className="flex w-full items-end justify-between gap-3">
@@ -175,6 +227,7 @@ function AnimalCheckInOut(props: {
 
             return (
               <AvatarWithTooltip
+                key={animalDetails.animal.id}
                 src="/placeholder-avatar.png"
                 className="cursor-pointer"
                 isSelected={selected.includes(
@@ -259,13 +312,28 @@ function AnimalCheckInOut(props: {
           })}
         </div>
       </div>
-      <Button
-        size="xs"
-        className="py-0"
-        onClick={() => props.setView?.("assign")}
-      >
-        Cancel
-      </Button>
+      {selected.length > 0 ? (
+        <Button
+          size="xs"
+          className="py-0"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading
+            ? "Loading..."
+            : props.mode === "check_in"
+              ? "Check In"
+              : "Check Out"}
+        </Button>
+      ) : (
+        <Button
+          size="xs"
+          className="py-0"
+          onClick={() => props.setView?.("assign")}
+        >
+          Cancel
+        </Button>
+      )}
     </div>
   );
 }

@@ -1,9 +1,20 @@
 import { Animal, AnimalWithEvents } from "@/utils/types";
 import instance from "./axios";
+import { AnimalSchema } from "./schemas/animal";
 
 export async function getAnimals() {
   const res = await instance.get("/animals");
   return res.data as Animal[];
+}
+
+export async function createAnimal(values: AnimalSchema) {
+  const res = await instance.post("/animals", values);
+  return res;
+}
+
+export async function updateAnimal(values: AnimalSchema, animalId: string) {
+  const res = await instance.put(`/animals/${animalId}`, values);
+  return res;
 }
 
 export async function getAnimal(animalId: string) {

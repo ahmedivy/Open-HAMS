@@ -6,11 +6,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { createAnimal, updateAnimal } from "@/api/animals";
 import { useAnimal, useZoos } from "@/api/queries";
 import { animalSchema, AnimalSchema } from "@/api/schemas/animal";
 import { tiers } from "@/api/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "react-query";
+import { toast } from "sonner";
 import { LoadingDots, Spinner } from "../icons";
 import { Button } from "../ui/button";
 import {
@@ -39,6 +43,8 @@ export function AnimalModel(props: {
   animalId?: string;
 }) {
   const { data: zoos, isLoading } = useZoos();
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data: animal, isLoading: isAnimalLoading } = useAnimal(
     props.animalId!,
   );
@@ -54,7 +60,7 @@ export function AnimalModel(props: {
             max_daily_checkout_hours: animal?.max_daily_checkout_hours!,
             rest_time: animal?.rest_time!,
             description: animal?.description!,
-            tier: animal?.tier!,
+            tier: animal?.tier!.toString(),
             handling_enabled: animal?.handling_enabled!,
             zoo_id: animal?.zoo_id?.toString(),
           }
@@ -67,11 +73,32 @@ export function AnimalModel(props: {
 
   async function onSubmit(values: AnimalSchema) {
     console.log(values);
+
+    var res;
+    if (props.mode === "add") {
+      res = await createAnimal(values);
+    } else {
+      res = await updateAnimal(values, props.animalId!);
+    }
+
+    if (res.status === 200) {
+      toast.success(res.data.message);
+      queryClient.invalidateQueries(["animals"]);
+
+      if (props.mode === "edit") {
+        queryClient.invalidateQueries(["animal", props.animalId!]);
+        queryClient.invalidateQueries(["animal_details", props.animalId!]);
+      }
+
+      setOpen(false);
+    } else {
+      toast.error(res.data.detail);
+    }
   }
 
   return (
-    <Dialog>
-      <DialogTrigger>{props.children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{props.children}</DialogTrigger>
       <DialogContent className="bg-model">
         <DialogTitle className="text-center font-light">
           {
@@ -142,6 +169,9 @@ export function AnimalModel(props: {
                         {...field}
                         type="number"
                         placeholder="Enter the maximum number of daily checkouts"
+                        onChange={(event) =>
+                          field.onChange(+event.target.value)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -159,6 +189,9 @@ export function AnimalModel(props: {
                         {...field}
                         type="number"
                         placeholder="Enter the maximum number of daily checkout hours"
+                        onChange={(event) =>
+                          field.onChange(+event.target.value)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -176,6 +209,9 @@ export function AnimalModel(props: {
                         {...field}
                         type="number"
                         placeholder="Enter the required rest time after an event"
+                        onChange={(event) =>
+                          field.onChange(+event.target.value)
+                        }
                       />
                     </FormControl>
                     <FormMessage />

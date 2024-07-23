@@ -2,15 +2,17 @@ from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy import JSON, func
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from sqlmodel import and_, col, select
+from sqlmodel import and_, col, desc, select
 
 from api.deps import CurrentUser, SessionDep
-from db.animals import get_all_animals, get_animal_by_id
+from db.animals import get_all_animals, get_animal_by_id, log_audit, log_fields_update
 from db.utils import has_permission
 from models import (
     Animal,
+    AnimalAudit,
+    AnimalAuditWithDetails,
     AnimalEvent,
     AnimalEventWithDetails,
     AnimalIn,
@@ -228,20 +230,28 @@ async def get_animal(animal_id: int, session: SessionDep) -> AnimalWithEvents:
 
 
 @router.post("/")
-async def create_animal(
-    animal: Animal, session: SessionDep, current_user: CurrentUser
-) -> Animal:
-    print(current_user.role.permissions)
-
+async def create_animal(body: AnimalIn, session: SessionDep, current_user: CurrentUser):
     if not has_permission(current_user.role.permissions, "manage_animals"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
 
+    animal = Animal(**body.model_dump())
     session.add(animal)
     await session.commit()
     await session.refresh(animal)
-    return animal
+    await session.refresh(current_user)
+
+    # log audit
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="animal_created",
+        description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) created an animal with name {animal.name}",
+    )
+
+    return JSONResponse({"message": "Animal created"}, status_code=200)
 
 
 @router.delete("/{animal_id}")
@@ -255,7 +265,18 @@ async def delete_animal(animal_id: int, session: SessionDep, current_user: Curre
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
 
+    # log audit
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="animal_deleted",
+        description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) deleted an animal with name {animal.name}",
+        commit=False,
+    )
+
     await session.delete(animal)
+    await session.commit()
     return {"message": "Animal deleted"}
 
 
@@ -277,6 +298,9 @@ async def update_animal(
 
     for field, value in animal_update.model_dump().items():
         setattr(animal, field, value)
+
+    # log audits for each field thats updated
+    await log_fields_update(session, animal, animal_update, current_user)
 
     await session.commit()
     await session.refresh(animal)
@@ -319,3 +343,24 @@ async def mark_animal_available(
     animal.status = "checked_in"
     await session.commit()
     return JSONResponse(content={"message": "Animal marked available"}, status_code=200)
+
+
+@router.put("/{animal_id}/audits")
+async def get_animal_audits(
+    animal_id: int, session: SessionDep
+) -> list[AnimalAuditWithDetails]:
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    audits = await session.exec(
+        select(AnimalAudit)
+        .where(col(AnimalAudit.animal_id) == animal_id)
+        .order_by(desc(AnimalAudit.changed_at))
+    )
+    audits = audits.all()
+
+    return [
+        AnimalAuditWithDetails(audit=audit, animal=audit.animal, user=audit.user)
+        for audit in audits
+    ]

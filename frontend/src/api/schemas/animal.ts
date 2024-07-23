@@ -15,7 +15,7 @@ export const animalSchema = z.object({
   max_daily_checkout_hours: z.number().int().positive(),
   max_daily_checkouts: z.number().int().positive(),
   rest_time: z.number().positive(),
-  tier: z.number().int().positive(),
+  tier: z.string({ message: "Tier is required" }),
   zoo_id: z.string({ message: "Zoo is required" }),
 });
 

@@ -1,5 +1,5 @@
 import { makeAnimalAvailable, makeAnimalUnavailable } from "@/api/animals";
-import { useAnimal, useUser } from "@/api/queries";
+import { useAnimalDetails, useUser } from "@/api/queries";
 import { EventsList } from "@/components/events/events-list";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export function AnimalDetailsPage() {
   if (!id) return null;
 
   const { data: user, isLoading: isUserLoading } = useUser();
-  const { data, isLoading } = useAnimal(id);
+  const { data, isLoading } = useAnimalDetails(id);
 
   if (isLoading || isUserLoading) return <Loading />;
   if (!data) throw new Error("Animal not found");

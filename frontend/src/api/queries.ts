@@ -2,11 +2,22 @@ import { EventWithCount, getEventDetails, getEvents } from "@/api/event";
 import { useQuery } from "react-query";
 
 import type { AnimalStatus } from "@/api/animals";
-import { getAnimal, getAnimalDetails, getAnimalsWithStatus } from "@/api/animals";
+import {
+  getAnimal,
+  getAnimalDetails,
+  getAnimalsWithStatus,
+} from "@/api/animals";
 import { getGroups } from "@/api/group";
 import { getAuthenticatedUser, getHandlers } from "@/api/user";
 import { getZoos } from "@/api/zoo";
-import { Animal, AnimalWithEvents, EventWithDetails, Group, User, Zoo } from "@/utils/types";
+import {
+  Animal,
+  AnimalWithEvents,
+  EventWithDetails,
+  Group,
+  User,
+  Zoo,
+} from "@/utils/types";
 
 import { getEventTypes } from "@/api/event-type";
 import { getRoles } from "@/api/roles";
@@ -61,10 +72,18 @@ export function useZoos() {
   });
 }
 
-export function useAnimal(animalId: string) {
+export function useAnimalDetails(animalId: string) {
   return useQuery<AnimalWithEvents>({
-    queryKey: ["animal", animalId],
+    queryKey: ["animal_details", animalId],
     queryFn: () => getAnimalDetails(animalId),
+  });
+}
+
+export function useAnimal(animalId: string) {
+  return useQuery<Animal>({
+    queryKey: ["animal", animalId],
+    queryFn: () => getAnimal(animalId),
+    enabled: !!animalId,
   });
 }
 

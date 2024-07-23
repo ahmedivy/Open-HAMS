@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 
 import sqlalchemy as sa
+from pydantic import BaseModel
 from sqlalchemy import Index
 from sqlalchemy.types import TIMESTAMP
 from sqlmodel import Field, Relationship, SQLModel
@@ -139,8 +141,18 @@ class AnimalEvent(SQLModel, table=True):
     user_in_id: int | None = Field(default=None, foreign_key="user.id")
     user_out_id: int | None = Field(default=None, foreign_key="user.id")
 
-    checked_in: datetime | None = Field(default=None)
-    checked_out: datetime | None = Field(default=None)
+    checked_in: datetime | None = Field(
+        default=None,
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        ),
+    )
+    checked_out: datetime | None = Field(
+        default=None,
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        ),
+    )
 
     duration: timedelta | None = Field(default=None)
 
@@ -277,17 +289,26 @@ class AnimalAudit(SQLModel, table=True):
 
     id: int = Field(primary_key=True)
     animal_id: int = Field(foreign_key="animal.id")
-    changed_field: str
+    changed_field: str | None = Field(default=None)
     old_value: str | None = Field(default=None)
     new_value: str | None = Field(default=None)
     description: str | None = Field(default=None)
     action: str
 
-    changed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    changed_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        ),
+    )
     changed_by: int = Field(foreign_key="user.id")
 
-    user: User = Relationship(back_populates="audits")
-    animal: Animal = Relationship(back_populates="audits")
+    user: User = Relationship(
+        back_populates="audits", sa_relationship_kwargs={"lazy": "joined"}
+    )
+    animal: Animal = Relationship(
+        back_populates="audits", sa_relationship_kwargs={"lazy": "joined"}
+    )
 
 
 class AnimalHealthLog(SQLModel, table=True):
@@ -339,24 +360,24 @@ class UserEvent(SQLModel, table=True):
 
 
 # Composite models
-class EventWithAnimals(SQLModel):
+class EventWithAnimals(BaseModel):
     event: Event
     animals: list[Animal]
 
 
-class GroupWithMembers(SQLModel):
+class GroupWithMembers(BaseModel):
     group: GroupWithZoo
     members: list[UserPublic]
 
 
-class EventCreate(SQLModel):
+class EventCreate(BaseModel):
     event: EventIn
     animal_ids: list[int]
     user_ids: list[int]
     checkout_immediately: bool = False
 
 
-class EventWithDetails(SQLModel):
+class EventWithDetails(BaseModel):
     event: Event
     animals: list[Animal]
     users: list[UserPublic]
@@ -364,21 +385,22 @@ class EventWithDetails(SQLModel):
     zoo: Zoo
 
 
-class UserEventWithDetails(SQLModel):
+class UserEventWithDetails(BaseModel):
     user_event: UserEvent
     user: UserPublic
 
 
-class AnimalEventWithDetails(SQLModel):
+class AnimalEventWithDetails(BaseModel):
     animal_event: AnimalEvent
     animal: Animal
 
-class EventCommentWithUser(SQLModel):
+
+class EventCommentWithUser(BaseModel):
     comment: EventComment
     user: UserPublic
 
 
-class EventWithDetailsAndComments(SQLModel):
+class EventWithDetailsAndComments(BaseModel):
     event: Event
     animals: list[AnimalEventWithDetails]
     users: list[UserEventWithDetails]
@@ -387,7 +409,7 @@ class EventWithDetailsAndComments(SQLModel):
     comments: list[EventCommentWithUser]
 
 
-class AnimalWithEvents(SQLModel):
+class AnimalWithEvents(BaseModel):
     animal: Animal
     upcoming_events: list[EventWithDetailsAndComments]
     current_events: list[EventWithDetailsAndComments]
@@ -395,3 +417,15 @@ class AnimalWithEvents(SQLModel):
     zoo: Zoo
     daily_checkout_count: int
     daily_checkout_duration: float
+
+
+class AnimalStatus(BaseModel):
+    animal: Animal
+    status: Literal["available", "checked_out", "unavailable"]
+    status_description: str
+
+
+class AnimalAuditWithDetails(BaseModel):
+    user: UserPublic
+    audit: AnimalAudit
+    animal: Animal

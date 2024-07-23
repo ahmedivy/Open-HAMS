@@ -44,3 +44,37 @@ export async function addComment(eventId: string, comment: string) {
   const res = await instance.post(`/events/${eventId}/comments`, { comment });
   return res;
 }
+
+export async function reAssignAnimalsToEvent(
+  eventId: string,
+  animalIds: string[],
+) {
+  const res = await instance.put(`/events/${eventId}/animals`, {
+    animal_ids: animalIds,
+  });
+  return res;
+}
+
+export async function reAssignHandlersToEvent(
+  eventId: string,
+  handlerIds: string[],
+) {
+  const res = await instance.put(`/events/${eventId}/handlers`, {
+    user_ids: handlerIds,
+  });
+  return res;
+}
+
+export async function checkoutAnimals(eventId: string, animalIds: string[]) {
+  const res = await instance.put(`/events/${eventId}/checkout`, {
+    animal_ids: animalIds,
+  });
+  return res;
+}
+
+export async function checkinAnimals(eventId: string, animalIds: string[]) {
+  const res = await instance.put(`/events/${eventId}/checkin`, {
+    animal_ids: animalIds,
+  });
+  return res;
+}

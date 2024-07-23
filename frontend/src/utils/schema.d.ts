@@ -285,6 +285,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/animals/{animal_id}/unavailable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark Animal Unavailable */
+        put: operations["mark_animal_unavailable_animals__animal_id__unavailable_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark Animal Available */
+        put: operations["mark_animal_available_animals__animal_id__available_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Get Animal Audits */
+        put: operations["get_animal_audits_animals__animal_id__audits_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/": {
         parameters: {
             query?: never;
@@ -322,7 +373,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/{event_id}/assign-animals": {
+    "/events/{event_id}/animals": {
         parameters: {
             query?: never;
             header?: never;
@@ -330,16 +381,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Assign Animals To Event */
-        post: operations["assign_animals_to_event_events__event_id__assign_animals_post"];
+        /** Reassign Animals To Event */
+        put: operations["reassign_animals_to_event_events__event_id__animals_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/events/{event_id}/remove-animals": {
+    "/events/{event_id}/handlers": {
         parameters: {
             query?: never;
             header?: never;
@@ -347,16 +398,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Remove Animals From Event */
-        post: operations["remove_animals_from_event_events__event_id__remove_animals_post"];
+        /** Reassign Handlers To Event */
+        put: operations["reassign_handlers_to_event_events__event_id__handlers_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/events/{event_id}/animal/{animal_id}/check-in": {
+    "/events/{event_id}/comments": {
         parameters: {
             query?: never;
             header?: never;
@@ -365,18 +416,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Check In Animal
-         * @description Check in an animal to an event and update the animal's daily checkout count
-         */
-        post: operations["check_in_animal_events__event_id__animal__animal_id__check_in_post"];
+        /** Add Comment To Event */
+        post: operations["add_comment_to_event_events__event_id__comments_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/events/{event_id}/animal/{animal_id}/check-out": {
+    "/events/{event_id}/checkin": {
         parameters: {
             query?: never;
             header?: never;
@@ -384,9 +432,26 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Check Out Animal */
-        post: operations["check_out_animal_events__event_id__animal__animal_id__check_out_post"];
+        /** Checkin Animal */
+        put: operations["checkin_animal_events__event_id__checkin_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{event_id}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Checkout Animal */
+        put: operations["checkout_animal_events__event_id__checkout_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -579,6 +644,41 @@ export interface components {
              */
             updated_at: string;
         };
+        /** AnimalAudit */
+        AnimalAudit: {
+            /** Id */
+            id: number;
+            /** Animal Id */
+            animal_id: number;
+            /** Changed Field */
+            changed_field?: string | null;
+            /** Old Value */
+            old_value?: string | null;
+            /** New Value */
+            new_value?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Action */
+            action: string;
+            /**
+             * Changed At
+             * Format: date-time
+             */
+            changed_at?: string;
+            /** Changed By */
+            changed_by: number;
+        };
+        /** AnimalAuditWithDetails */
+        AnimalAuditWithDetails: {
+            user: components["schemas"]["UserPublic"];
+            audit: components["schemas"]["AnimalAudit"];
+            animal: components["schemas"]["Animal"];
+        };
+        /** AnimalCheckInOut */
+        AnimalCheckInOut: {
+            /** Animal Ids */
+            animal_ids: number[];
+        };
         /** AnimalEvent */
         AnimalEvent: {
             /** Id */
@@ -677,6 +777,16 @@ export interface components {
             /** Daily Checkout Duration */
             daily_checkout_duration: number;
         };
+        /** AssignAnimalsIn */
+        AssignAnimalsIn: {
+            /** Animal Ids */
+            animal_ids: number[];
+        };
+        /** AssignHandlersIn */
+        AssignHandlersIn: {
+            /** Handler Ids */
+            handler_ids: number[];
+        };
         /** Body_login_users_login_post */
         Body_login_users_login_post: {
             /** Grant Type */
@@ -748,6 +858,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** EventCommentIn */
+        EventCommentIn: {
+            /** Comment */
+            comment: string;
         };
         /** EventCommentWithUser */
         EventCommentWithUser: {
@@ -1682,7 +1797,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Animal"];
+                "application/json": components["schemas"]["AnimalIn"];
             };
         };
         responses: {
@@ -1692,7 +1807,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Animal"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1821,6 +1936,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_animal_unavailable_animals__animal_id__unavailable_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_animal_available_animals__animal_id__available_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_animal_audits_animals__animal_id__audits_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnimalAuditWithDetails"][];
                 };
             };
             /** @description Validation Error */
@@ -1984,7 +2192,7 @@ export interface operations {
             };
         };
     };
-    assign_animals_to_event_events__event_id__assign_animals_post: {
+    reassign_animals_to_event_events__event_id__animals_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -1995,7 +2203,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": number[];
+                "application/json": components["schemas"]["AssignAnimalsIn"];
             };
         };
         responses: {
@@ -2019,7 +2227,7 @@ export interface operations {
             };
         };
     };
-    remove_animals_from_event_events__event_id__remove_animals_post: {
+    reassign_handlers_to_event_events__event_id__handlers_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2030,7 +2238,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": number[];
+                "application/json": components["schemas"]["AssignHandlersIn"];
             };
         };
         responses: {
@@ -2054,17 +2262,20 @@ export interface operations {
             };
         };
     };
-    check_in_animal_events__event_id__animal__animal_id__check_in_post: {
+    add_comment_to_event_events__event_id__comments_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 event_id: number;
-                animal_id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCommentIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -2086,17 +2297,55 @@ export interface operations {
             };
         };
     };
-    check_out_animal_events__event_id__animal__animal_id__check_out_post: {
+    checkin_animal_events__event_id__checkin_put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 event_id: number;
-                animal_id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnimalCheckInOut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    checkout_animal_events__event_id__checkout_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnimalCheckInOut"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
