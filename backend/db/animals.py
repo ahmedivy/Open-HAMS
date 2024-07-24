@@ -1,6 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlmodel import and_, col, desc, select
 
@@ -11,6 +12,7 @@ from models import (
     AnimalEvent,
     AnimalIn,
     AnimalStatus,
+    Event,
     User,
 )
 
@@ -118,8 +120,14 @@ async def update_animals_status(
     )
     animals = list(animals.all())  # type: ignore
 
+    now = datetime.now(UTC)
+
     for animal in animals:
         animal.status = status
+
+        if status == "checked_in":
+            animal.last_checkin_time = now
+
         session.add(animal)
     await session.commit()
 
@@ -154,6 +162,8 @@ AuditActions = Literal[
     "event_participation_added",
     "event_participation_removed",
     "zoo_changed",
+    "animal_status_changed",
+    "rest_time_started",
 ]
 
 
@@ -198,8 +208,8 @@ async def log_fields_update(
                 changed_by=current_user.id,
                 action=get_action(field),
                 changed_field=field,
-                old_value=getattr(animal, field),
-                new_value=value,
+                old_value=str(getattr(animal, field)),
+                new_value=str(value),
                 description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) updated an animal with name {animal.name}",
                 commit=False,
             )
@@ -224,3 +234,78 @@ def get_action(field: str) -> AuditActions:
 
         case _:
             return "animal_updated"
+
+
+# ---------------------------------------------
+# HELPER FUNCTIONS FOR EVENT CHECKOUT & CHECKIN
+# ---------------------------------------------
+
+
+async def validate_animals(
+    animal_ids: list[int], session, zoo_id: int | None = None
+) -> list[Animal]:
+    query = select(Animal).where(col(Animal.id).in_(animal_ids))
+    if zoo_id:
+        query = query.where(Animal.zoo_id == zoo_id)
+
+    animals = await session.exec(query)
+    animals = list(animals.all())
+    if len(animals) != len(animal_ids):
+        raise HTTPException(status_code=404, detail="Animal not found")
+    return animals
+
+
+async def validate_event_clashes(
+    animal_ids: list[int],
+    end_at: datetime,
+    start_at: datetime,
+    zoo_id: int,
+    session,
+    event_id: int | None = None,
+):
+    clashing_animals = await session.exec(
+        select(Animal.name)
+        .join(AnimalEvent)
+        .join(Event)
+        .where(
+            and_(
+                Event.start_at <= end_at,
+                Event.end_at >= start_at,
+                Event.zoo_id == zoo_id,
+                col(Animal.id).in_(animal_ids),
+                Event.id != event_id if event_id else True,
+            )
+        )
+        .group_by(Animal.name)
+    )
+    clashing_animals = list(clashing_animals.all())
+    if clashing_animals:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Animal{"" if len(clashing_animals) == 1 else "s"} {', '.join([animal for animal in clashing_animals])} is already assigned to an event during this time",
+        )
+
+    return None
+
+
+async def validate_tiers(animals: list[Animal], current_user: User):
+    for animal in animals:
+        if animal.tier > current_user.tier:
+            raise HTTPException(
+                status_code=401,
+                detail=f"You need to be on tier {animal.tier} to checkout this animal",
+            )
+    return
+
+
+async def validate_animals_availability(animal_ids: list[int], session):
+    animals_status = await get_animals_status(session, animal_ids=animal_ids)
+
+    for animal_status in animals_status:
+        if animal_status.status != "available":
+            raise HTTPException(
+                status_code=400,
+                detail=f"{animal_status.animal.name} is not available to checkout",
+            )
+
+    return
