@@ -96,6 +96,7 @@ class UserPublic(SQLModel):
     last_name: str
     username: str
     tier: int = Field(default=1)
+    image: str | None = Field(default=None)
 
     created_at: datetime = created_at_field()
     updated_at: datetime = updated_at_field()
@@ -175,7 +176,12 @@ class AnimalIn(SQLModel):
 
     daily_checkout_count: int = Field(default=0)
     daily_checkout_duration: timedelta = Field(default=timedelta(hours=0))
-    last_checkin_time: datetime | None = Field(default=None)
+    last_checkin_time: datetime | None = Field(
+        default=None,
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        ),
+    )
     checked_in: bool = Field(default=True)
     handling_enabled: bool
     status: str | None = Field(default="checked_in")
@@ -311,17 +317,30 @@ class AnimalAudit(SQLModel, table=True):
     )
 
 
+class AnimalHealthLogIn(SQLModel):
+    details: str
+
+
 class AnimalHealthLog(SQLModel, table=True):
     __tablename__ = "animal_health_log"  # type: ignore
 
     id: int = Field(primary_key=True)
     animal_id: int = Field(foreign_key="animal.id")
     details: str
-    logged_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    logged_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        ),
+    )
     logged_by: int = Field(foreign_key="user.id")
 
-    animal: Animal = Relationship(back_populates="health_logs")
-    user: User = Relationship(back_populates="health_logs")
+    animal: Animal = Relationship(
+        back_populates="health_logs", sa_relationship_kwargs={"lazy": "joined"}
+    )
+    user: User = Relationship(
+        back_populates="health_logs", sa_relationship_kwargs={"lazy": "joined"}
+    )
 
 
 class EventCommentIn(SQLModel):
@@ -428,4 +447,10 @@ class AnimalStatus(BaseModel):
 class AnimalAuditWithDetails(BaseModel):
     user: UserPublic
     audit: AnimalAudit
+    animal: Animal
+
+
+class AnimalHealthLogWithDetails(BaseModel):
+    user: UserPublic
+    log: AnimalHealthLog
     animal: Animal
