@@ -52,7 +52,13 @@ import {
 import { AnimalsSelect } from "./animals-select";
 import { HandlerSelect } from "./handlers-select";
 
-export function EditEventFormWrapper({ eventId }: { eventId: string }) {
+export function EditEventFormWrapper({
+  eventId,
+  setOpen,
+}: {
+  eventId: string;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const eventDetails = useEvent(eventId);
   if (eventDetails.isLoading) return <LoadingDots className="size-4" />;
 
@@ -217,13 +223,13 @@ export function EditEventForm({
                   setSelectedAnimals={setSelectedAnimals}
                 />
               </div>
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <Label className="text-sm">Check out immediately</Label>
                 <Switch
                   checked={checkoutImmediately}
                   onCheckedChange={setCheckoutImmediately}
                 />
-              </div>
+              </div> */}
             </div>
             <FormField
               control={form.control}

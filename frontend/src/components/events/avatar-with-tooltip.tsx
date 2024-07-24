@@ -1,5 +1,5 @@
-import { cn } from "@/utils";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { cn, getInitials } from "@/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -10,12 +10,14 @@ import {
 export function AvatarWithTooltip({
   src,
   children,
+  name,
   onClick,
   isSelected,
   className,
 }: {
   src: string;
   children: React.ReactNode;
+  name?: string;
   isSelected?: boolean;
   onClick?: () => void;
   className?: string;
@@ -37,9 +39,10 @@ export function AvatarWithTooltip({
             onClick={onClick}
           >
             <AvatarImage src={src} />
+            <AvatarFallback>{getInitials(name!)}</AvatarFallback>
           </Avatar>
         </TooltipTrigger>
-        <TooltipContent className="min-w-[200px] border bg-background shadow-lg grid gap-2">
+        <TooltipContent className="grid min-w-[200px] gap-2 border bg-background shadow-lg">
           {children}
         </TooltipContent>
       </Tooltip>

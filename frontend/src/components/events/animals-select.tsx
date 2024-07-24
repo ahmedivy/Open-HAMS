@@ -27,7 +27,7 @@ export function AnimalsSelect(props: {
         toRender: (
           <>
             <Avatar className="size-5">
-              <AvatarImage src="/placeholder-avatar.png" />
+              <AvatarImage src={animal_info.animal.image!} />
             </Avatar>
             <span className="font-extralightlight text-xs text-foreground">
               {animal_info.animal.name}
@@ -45,7 +45,7 @@ export function AnimalsSelect(props: {
                   </span>
                 </div>
               ) : (
-                <span className="">Checked Out</span>
+                <span className="text-xs">Checked Out</span>
               )}
             </span>
           </>
@@ -62,10 +62,10 @@ export function AnimalsSelect(props: {
           (animalDetails) => animalDetails.animal.id.toString() === value,
         );
         return (
-          <AvatarWithTooltip src="/placeholder-avatar.png">
+          <AvatarWithTooltip src={animal?.animal.image!}>
             <div className="flex items-center gap-2">
               <Avatar className="size-8">
-                <AvatarImage src="/placeholder-avatar.png" />
+                <AvatarImage src={animal?.animal.image!} />
               </Avatar>
               <span className="text-md font-semibold">
                 {animal?.animal.name}

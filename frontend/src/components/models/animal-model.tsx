@@ -6,16 +6,33 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { createAnimal, getAnimal, updateAnimal } from "@/api/animals";
+import {
+  createAnimal,
+  deleteAnimal,
+  getAnimal,
+  updateAnimal,
+} from "@/api/animals";
 import { useZoos } from "@/api/queries";
 import { animalSchema, AnimalSchema } from "@/api/schemas/animal";
+import { uploadFile } from "@/api/upload";
 import { tiers } from "@/api/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { LoadingDots, Spinner } from "../icons";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -47,10 +64,13 @@ export function AnimalModel(props: {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild onClick={(e) => {
-        setOpen(true);
-        e.stopPropagation();
-      }}>
+      <DialogTrigger
+        asChild
+        onClick={(e) => {
+          setOpen(true);
+          e.stopPropagation();
+        }}
+      >
         {props.children}
       </DialogTrigger>
       <DialogContent className="bg-model">
@@ -78,6 +98,10 @@ export function AnimalForm(props: {
   setOpen: (open: boolean) => void;
 }) {
   const { data: zoos, isLoading } = useZoos();
+  const [isImageUpload, setIsImageUpload] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+
   const queryClient = useQueryClient();
 
   const form = useForm<AnimalSchema>({
@@ -142,6 +166,10 @@ export function AnimalForm(props: {
     }
   }
 
+  async function onImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    event.preventDefault();
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1">
@@ -178,11 +206,59 @@ export function AnimalForm(props: {
             <FormItem>
               <FormLabel>Image</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  // type="file"
-                  placeholder="Enter image url"
-                />
+                <div className="flex w-full items-center justify-between gap-3">
+                  {isImageUpload ? (
+                    <Input
+                      type="file"
+                      placeholder="Select image"
+                      className="w-full"
+                      onChange={(event) => {
+                        setImage(event.target.files?.[0] || null);
+                        // setIsImageUpload(true);
+                      }}
+                    />
+                  ) : (
+                    <Input
+                      {...field}
+                      placeholder="Enter image url or upload"
+                      className="w-full"
+                    />
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={async (e) => {
+                      e.preventDefault();
+
+                      if (isImageUploading) return;
+
+                      if (isImageUpload && image) {
+                        setIsImageUploading(true);
+
+                        const res = await uploadFile(image);
+                        if (res.status === 200) {
+                          setIsImageUpload(false);
+                          form.setValue("image", res.data.file_url);
+                          toast.success("Image uploaded successfully");
+                        } else {
+                          toast.error(res.data.detail);
+                        }
+                        setIsImageUploading(false);
+                      } else if (isImageUpload && !image) {
+                        setIsImageUpload(false);
+                      } else {
+                        setIsImageUpload(true);
+                      }
+                    }}
+                    disabled={isImageUploading}
+                  >
+                    {isImageUploading && <Spinner className="mr-2 size-4" />}
+                    {isImageUpload && image
+                      ? "Save"
+                      : isImageUpload && !image
+                        ? "Cancel"
+                        : "Upload"}
+                  </Button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -330,6 +406,10 @@ export function AnimalForm(props: {
           )}
         />
 
+        {props.mode === "edit" && (
+          <AnimalDelete animalId={props.animalId!} setOpen={props.setOpen} />
+        )}
+
         <div className="flex w-full items-center justify-center gap-3">
           <DialogClose asChild>
             <Button variant="ghost" type="button">
@@ -343,5 +423,62 @@ export function AnimalForm(props: {
         </div>
       </form>
     </Form>
+  );
+}
+
+export function AnimalDelete(props: {
+  animalId: string;
+  setOpen: (open: boolean) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant={"destructive"} size="sm" className="">
+          Delete Animal
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete animal
+            record
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <Button
+            onClick={async (e) => {
+              e.preventDefault();
+
+              setLoading(true);
+              const res = await deleteAnimal(props.animalId);
+              if (res.status === 200) {
+                toast.success("Animal deleted successfully");
+                queryClient.invalidateQueries({
+                  queryKey: ["animals"],
+                });
+                setOpen(false);
+                props.setOpen(false);
+                navigate(0);
+              } else {
+                toast.error(res.data.detail);
+              }
+              setLoading(false);
+            }}
+            variant={"destructive"}
+            disabled={loading}
+          >
+            {loading && <Spinner className="mr-2 size-4" />}
+            Delete
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

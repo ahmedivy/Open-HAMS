@@ -5,13 +5,14 @@ import {
   reAssignAnimalsToEvent,
   reAssignHandlersToEvent,
 } from "@/api/event";
-import { useAnimalStatus } from "@/api/queries";
-import { arraysEqual, formatDate, formatTime } from "@/utils";
+import { useAnimalStatus, useUser } from "@/api/queries";
+import { arraysEqual, formatDate, formatTime, getInitials } from "@/utils";
 import {
   AnimalEventWithDetails,
   Comment,
   EventWithDetailsAndComments,
 } from "@/utils/types";
+import { AvatarFallback } from "@radix-ui/react-avatar";
 import { CheckCircle, ChevronRight, Minus, XCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useQueryClient } from "react-query";
@@ -219,7 +220,10 @@ function AnimalCheckInOut(props: {
       <div className="grid">
         <Label className="text-sm font-light">Animals</Label>
         <div className="flex h-12 flex-wrap items-center gap-2">
-          <Minus className="size-5 text-red-500" />
+          <Minus
+            className="size-5 text-red-500"
+            onClick={() => props.setView?.("assign")}
+          />
           {props.animalsDetails.map((animalDetails) => {
             const animalStatus = animalsStatus?.find(
               (status) => status.animal.id === animalDetails.animal.id,
@@ -228,7 +232,7 @@ function AnimalCheckInOut(props: {
             return (
               <AvatarWithTooltip
                 key={animalDetails.animal.id}
-                src="/placeholder-avatar.png"
+                src={animalDetails.animal.image!}
                 className="cursor-pointer"
                 isSelected={selected.includes(
                   animalDetails.animal.id.toString(),
@@ -245,7 +249,7 @@ function AnimalCheckInOut(props: {
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="size-8">
-                    <AvatarImage src="/placeholder-avatar.png" />
+                    <AvatarImage src={animalDetails.animal.image!} />
                   </Avatar>
                   <span className="text-md font-semibold">
                     {animalDetails?.animal.name}
@@ -348,6 +352,7 @@ export function CommentsBox({
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState("");
   const [isLoading, startTransition] = useTransition();
+  const { data: user, isLoading: isUserLoading } = useUser();
   const queryClient = useQueryClient();
 
   const onClick = (e: any) => {
@@ -393,8 +398,11 @@ export function CommentsBox({
         </div>
         {isOpen && (
           <div className="mr-2 flex items-center gap-3">
-            <Avatar className="size-12">
-              <AvatarImage src="/placeholder-avatar.png" />
+            <Avatar className="size-12 bg-secondary">
+              <AvatarImage src={user?.image!} />
+              <AvatarFallback className="text-xl self-center mx-auto">
+                {getInitials(user?.first_name!, user?.last_name)}
+              </AvatarFallback>
             </Avatar>
             <Input
               placeholder="Add a comment..."
@@ -420,7 +428,10 @@ export function CommentEntry({ comment }: { comment: Comment }) {
   return (
     <div className="flex items-center gap-4">
       <Avatar className="size-12">
-        <AvatarImage src="/placeholder-avatar.png" />
+        <AvatarImage src={comment.user.image!} />
+        <AvatarFallback className="text-xl self-center mx-auto">
+          {getInitials(comment.user.first_name!, comment.user.last_name)}
+        </AvatarFallback>
       </Avatar>
       <div className="grid gap-1">
         <div className="flex items-center gap-2 text-xs">

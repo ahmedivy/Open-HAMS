@@ -1,6 +1,7 @@
 import { useHandlers } from "@/api/queries";
+import { getInitials } from "@/utils";
 import { LoadingDots } from "../icons";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { AvatarWithTooltip } from "./avatar-with-tooltip";
@@ -23,7 +24,10 @@ export function HandlerSelect(props: {
         toRender: (
           <>
             <Avatar className="size-5">
-              <AvatarImage src="/placeholder-avatar.png" />
+              <AvatarImage src={handler.image!} />
+              <AvatarFallback>
+                {getInitials(handler.first_name, handler.last_name)}
+              </AvatarFallback>
             </Avatar>
             <span className="text-xs font-light text-foreground">
               {handler.first_name} {handler.last_name}
@@ -38,10 +42,13 @@ export function HandlerSelect(props: {
           (handler) => handler.id.toString() === value,
         );
         return (
-          <AvatarWithTooltip src="/placeholder-avatar.png">
+          <AvatarWithTooltip src={handler?.image!} name={handler?.first_name + " " + handler?.last_name}>
             <div className="flex items-center gap-2">
               <Avatar className="size-8">
-                <AvatarImage src="/placeholder-avatar.png" />
+                <AvatarImage src={handler?.image!} />
+                <AvatarFallback>
+                  {getInitials(handler?.first_name!, handler?.last_name)}
+                </AvatarFallback>
               </Avatar>
               <span className="text-md font-semibold">
                 {handler?.first_name} {handler?.last_name}

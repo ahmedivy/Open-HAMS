@@ -28,11 +28,12 @@ import {
   eventSchema,
   transformEventSchema,
 } from "@/api/schemas/event";
+import { getInitials } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { LoadingDots, Spinner } from "../icons";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Form,
   FormControl,
@@ -48,19 +49,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
+import { AvatarWithTooltip } from "./avatar-with-tooltip";
 import { CustomSelect } from "./custom-select";
+import { useQueryClient } from "react-query";
 
 export function NewEventModel() {
   const form = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
     defaultValues: {},
   });
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventType();
   const { data: zoos, isLoading: isLoadingZoos } = useZoos();
@@ -91,20 +90,21 @@ export function NewEventModel() {
       user_ids: selectedHandlers,
       checkout_immediately: checkoutImmediately,
     };
-
-    console.log(data);
-
     const res = await createEvent(data);
     if (res.status === 200) {
       form.reset();
       toast.success("Event created successfully");
+      setOpen(false);
+      queryClient.invalidateQueries({
+        queryKey: ["events"],
+      })
     } else {
       toast.error(res.data.detail);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
         <Button className="ml-auto">
           <Plus className="mr-2 size-4" />
@@ -202,7 +202,13 @@ export function NewEventModel() {
                       toRender: (
                         <>
                           <Avatar className="size-5">
-                            <AvatarImage src="/placeholder-avatar.png" />
+                            <AvatarImage src={handler.image!} />
+                            <AvatarFallback>
+                              {getInitials(
+                                handler.first_name,
+                                handler.last_name,
+                              )}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="text-xs font-light text-foreground">
                             {handler.first_name} {handler.last_name}
@@ -217,10 +223,19 @@ export function NewEventModel() {
                         (handler) => handler.id.toString() === value,
                       );
                       return (
-                        <AvatarWithTooltip src="/placeholder-avatar.png">
+                        <AvatarWithTooltip
+                          src={handler?.image!}
+                          name={handler?.first_name + " " + handler?.last_name}
+                        >
                           <div className="flex items-center gap-2">
                             <Avatar className="size-8">
-                              <AvatarImage src="/placeholder-avatar.png" />
+                            <AvatarImage src={handler?.image!} />
+                              <AvatarFallback>
+                                {getInitials(
+                                  handler?.first_name!,
+                                  handler?.last_name,
+                                )}
+                              </AvatarFallback>
                             </Avatar>
                             <span className="text-md font-semibold">
                               {handler?.first_name} {handler?.last_name}
@@ -266,7 +281,10 @@ export function NewEventModel() {
                       toRender: (
                         <>
                           <Avatar className="size-5">
-                            <AvatarImage src="/placeholder-avatar.png" />
+                            <AvatarImage src={animal_info.animal.image!} />
+                            <AvatarFallback>
+                              {getInitials(animal_info.animal.name)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="font-extralightlight text-xs text-foreground">
                             {animal_info.animal.name}
@@ -300,10 +318,16 @@ export function NewEventModel() {
                           animal_info.animal.id.toString() === value,
                       );
                       return (
-                        <AvatarWithTooltip src="/placeholder-avatar.png">
+                        <AvatarWithTooltip
+                          src={animal?.animal.image!}
+                          name={animal?.animal.name}
+                        >
                           <div className="flex items-center gap-2">
                             <Avatar className="size-8">
-                              <AvatarImage src="/placeholder-avatar.png" />
+                              <AvatarImage src={animal?.animal.image!} />
+                              <AvatarFallback>
+                                {getInitials(animal?.animal.name!)}
+                              </AvatarFallback>
                             </Avatar>
                             <span className="text-md font-semibold">
                               {animal?.animal.name}
@@ -414,28 +438,5 @@ export function NewEventModel() {
         </Form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function AvatarWithTooltip({
-  src,
-  children,
-}: {
-  src: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Avatar className="size-8">
-            <AvatarImage src={src} />
-          </Avatar>
-        </TooltipTrigger>
-        <TooltipContent className="min-w-[200px] border bg-background shadow-lg">
-          {children}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
