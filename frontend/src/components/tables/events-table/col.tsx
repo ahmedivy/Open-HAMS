@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "../table-commons/col-headers";
+import { useState } from "react";
 
 export const eventTableColumns: ColumnDef<EventWithCount>[] = [
   {
@@ -42,7 +43,9 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span className="truncate max-w-48">{row.getValue("description") as string}</span>
+          <span className="max-w-48 truncate">
+            {row.getValue("description") as string}
+          </span>
         </div>
       );
     },
@@ -106,31 +109,6 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
     },
     accessorFn: (row) => row.animal_count,
   },
-  //   {
-  //     accessorKey: "status",
-  //     header: ({ column }) => (
-  //       <DataTableColumnHeader column={column} title="Status" />
-  //     ),
-  //     cell: ({ row }) => {
-  //       return <p>{row.getValue("status")}</p>;
-  //     },
-  //     filterFn: (row, id, value) => {
-  //       return row[id].toLowerCase().includes(value.toLowerCase());
-  //     },
-  //   },
-  //   {
-  //     accessorKey: "lastEditedBy",
-  //     header: ({ column }) => (
-  //       <DataTableColumnHeader column={column} title="Last Edited By" />
-  //     ),
-  //     cell: ({ row }) => {
-  //       return (
-  //         <div className="flex items-center">
-  //           <span>{row.getValue("lastEditedBy")}</span>
-  //         </div>
-  //       );
-  //     },
-  //   },
   {
     id: "updated_at",
     header: ({ column }) => (
@@ -161,17 +139,21 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => (
-      <Dialog>
-        <DialogTrigger>
-          <Badge variant="secondary" className="font-thin">
-            edit
-          </Badge>
-        </DialogTrigger>
-        <DialogContent className="max-w-fit">
-          <EditEventFormWrapper eventId={row.getValue("id")} />
-        </DialogContent>
-      </Dialog>
-    ),
+    cell: ({ row }) => {
+      const [open, setOpen] = useState(false);
+
+      return (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger>
+            <Badge variant="secondary" className="font-thin">
+              edit
+            </Badge>
+          </DialogTrigger>
+          <DialogContent className="max-w-fit">
+            <EditEventFormWrapper eventId={row.getValue("id")} setOpen={setOpen} />
+          </DialogContent>
+        </Dialog>
+      );
+    },
   },
 ];

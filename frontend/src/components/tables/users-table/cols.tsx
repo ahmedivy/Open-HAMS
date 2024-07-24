@@ -1,4 +1,4 @@
-import { capitalize } from "@/utils";
+import { capitalize, getInitials } from "@/utils";
 import { User } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
@@ -12,8 +12,10 @@ export const columns: ColumnDef<User>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
     cell: ({ row }) => (
       <Avatar className="m-2">
-        <AvatarImage src="/placeholder-avatar.png" alt={row.getValue("name")} />
-        <AvatarFallback>{row.original.first_name[0]}</AvatarFallback>
+        <AvatarImage src={row.getValue("image")} alt={row.getValue("name")} />
+        <AvatarFallback>
+          {getInitials(row.original.first_name, row.original.last_name)}
+        </AvatarFallback>
       </Avatar>
     ),
     enableSorting: false,

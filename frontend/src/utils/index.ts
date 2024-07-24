@@ -60,6 +60,25 @@ export function timeSince(data: string) {
   return "Just now";
 }
 
-export function snakeToCapitalized(str: string) {
-  return str.replace(/(_\w)/g, (m) => m[1].toUpperCase());
+export function snakeToCapitalCase(str: string) {
+  const words = str.split("_");
+  const capitalizedWords = words.map(
+    (word) => word.charAt(0).toUpperCase() + word.slice(1),
+  );
+  const formattedStr = capitalizedWords.join(" ");
+  return formattedStr;
+}
+
+export function getInitials(firstName: string, lastName?: string) {
+  if (!firstName) return "U";
+
+  if (lastName) {
+    const initials = firstName[0] + lastName[0];
+    return initials.toUpperCase();
+  } else {
+    const splits = firstName.split(" ");
+    if (splits.length <= 2) return firstName.slice(0, 2).toUpperCase();
+    const initials = splits[0][0] + splits[1][0];
+    return initials.toUpperCase();
+  }
 }

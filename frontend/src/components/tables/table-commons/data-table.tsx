@@ -24,8 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { cn } from "@/utils";
 import { useNavigate } from "react-router-dom";
-import { DataTableToolbar } from "../user-management/user-management-toolbar";
 import { DataTablePagination } from "./pagination";
 
 interface DataTableProps<TData, TValue> {
@@ -76,7 +76,7 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {
         // @ts-ignore
-        Toolbar ? <Toolbar table={table} /> : <DataTableToolbar table={table} />
+        Toolbar ? <Toolbar table={table} /> : null
       }
 
       <div className="rounded-md">
@@ -105,7 +105,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer"
+                  className={cn(rowHref ? "cursor-pointer" : "")}
                 >
                   {row.getVisibleCells().map((cell) => {
                     // check if cell is named actions

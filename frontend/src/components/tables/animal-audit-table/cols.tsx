@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatDate, snakeToCapitalized } from "@/utils";
+import { formatDate, snakeToCapitalCase } from "@/utils";
 import { AnimalAuditWithDetails } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Info } from "lucide-react";
@@ -64,7 +64,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
         </div>
       );
     },
-    accessorFn: (row) => snakeToCapitalized(row.audit.action),
+    accessorFn: (row) => snakeToCapitalCase(row.audit.action),
   },
   {
     id: "changed_by",
@@ -88,7 +88,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("changed_field")}</span>
+          <span>{snakeToCapitalCase(row.getValue("changed_field"))}</span>
         </div>
       );
     },
@@ -102,7 +102,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("old_value")}</span>
+          <span>{snakeToCapitalCase(row.getValue("old_value"))}</span>
         </div>
       );
     },
@@ -116,7 +116,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("new_value")}</span>
+          <span>{snakeToCapitalCase(row.getValue("new_value"))}</span>
         </div>
       );
     },
@@ -128,7 +128,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
       <DataTableColumnHeader column={column} title="Changed At" />
     ),
     cell: ({ row }) => {
-      return <p>{row.getValue("tier")}</p>;
+      return <p>{row.getValue("changed_at")}</p>;
     },
     accessorFn: (row) => formatDate(row.audit.changed_at),
   },

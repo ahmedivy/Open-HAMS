@@ -3,6 +3,7 @@ import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 import { ColumnDef } from "@tanstack/react-table";
 
+import { useGroups, useRoles } from "@/api/queries";
 import { updateGroup, updateRole, updateTier } from "@/api/user";
 import {
   Select,
@@ -11,9 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRoles } from "@/api/queries";
-import { useGroups } from "@/api/queries";
-import { capitalize } from "@/utils";
+import { capitalize, getInitials } from "@/utils";
 import { User } from "@/utils/types";
 import { useMutation } from "react-query";
 import { toast } from "sonner";
@@ -155,11 +154,12 @@ export const userManagementColumns: ColumnDef<User>[] = [
     cell: ({ row }) => (
       <Avatar className="m-2">
         <AvatarImage
-          // src={row.getValue("image")}
-          src="/placeholder-avatar.png"
+          src={row.getValue("image")}
           alt={row.original.first_name}
         />
-        <AvatarFallback>{row.original.first_name[0]}</AvatarFallback>
+        <AvatarFallback>
+          {getInitials(row.original.first_name, row.original.last_name)}
+        </AvatarFallback>
       </Avatar>
     ),
     enableSorting: false,

@@ -1,7 +1,14 @@
 import { makeAnimalAvailable, makeAnimalUnavailable } from "@/api/animals";
-import { useAnimalAuditLog, useAnimalDetails, useUser } from "@/api/queries";
+import {
+  useAnimalAuditLog,
+  useAnimalDetails,
+  useAnimalHealthLog,
+  useUser,
+} from "@/api/queries";
 import { EventsList } from "@/components/events/events-list";
+import { NewHealthLogModel } from "@/components/models/health-log-model";
 import { animalAuditTableColumns } from "@/components/tables/animal-audit-table/cols";
+import { animalHealthLogTableColumns } from "@/components/tables/animal-health-table/cols";
 import { DataTable } from "@/components/tables/table-commons/data-table";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +37,7 @@ export function AnimalDetailsPage() {
       <section className="flex h-full w-full gap-4 px-12 pb-4 pt-8 lg:gap-8">
         <div className="flex min-h-full w-1/3 flex-col gap-4 rounded-md bg-white p-6 pt-16 shadow-sm">
           <Avatar className="mx-auto size-32">
-            <AvatarImage src={"/placeholder-avatar.png"} />
+            <AvatarImage src={data.animal.image!} />
           </Avatar>
           <h1 className="text-center text-2xl text-black">
             {data.animal.name}
@@ -81,19 +88,21 @@ export function AnimalDetailsPage() {
                 </Badge>
               </div>
               {data.animal.status === "checked_out" ? (
-                <CardDetails className="font-semibold text-red-400">
-                  Checked Out
-                </CardDetails>
-              ) : (
+                <CardDetails className="font-semibold">Checked Out</CardDetails>
+              ) : data.animal.status === "checked_in" ? (
                 <CardDetails className="font-semibold text-green-400">
                   Checked In
+                </CardDetails>
+              ) : (
+                <CardDetails className="font-semibold text-red-400">
+                  Not Available
                 </CardDetails>
               )}
             </Card>
             <Card className="gap-2">
               <CardHeading>Weekly Event Acitivity</CardHeading>
               <CardDetails className="flex flex-col gap-0 text-black">
-                <span className="text-2xl">{4.5}</span>
+                <span className="">{data.daily_checkout_duration.toFixed(2)}</span>
                 <span className="text-sm font-light">hours</span>
               </CardDetails>
             </Card>
@@ -179,22 +188,10 @@ export function AnimalDetailsPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="audit-log">
-            <AnimalAuditTabls animalId={id} />
+            <AnimalAuditTable animalId={id} />
           </TabsContent>
           <TabsContent value="health-log">
-            {/* <div className="mt-10 w-full max-w-[900px] rounded-lg border bg-white p-8 shadow-sm">
-            <div className="flex w-full items-center justify-between">
-              <h2 className="mb-4 text-2xl font-semibold">
-                Event Type Management
-              </h2>
-              <NewEventTypeModel />
-            </div>
-            <DataTable
-              data={eventTypeData}
-              columns={eventTypesColumns}
-              toolbar={"none"}
-            />
-          </div> */}
+            <AnimalHealthLogTable animalId={id} />
           </TabsContent>
         </Tabs>
       </section>
@@ -217,7 +214,7 @@ function Feature(props: {
   );
 }
 
-function AnimalAuditTabls({ animalId }: { animalId: string }) {
+function AnimalAuditTable({ animalId }: { animalId: string }) {
   const { data, isLoading } = useAnimalAuditLog(animalId);
   if (isLoading) return <Loading />;
   if (!data) return <div>No Audit Log</div>;
@@ -226,6 +223,21 @@ function AnimalAuditTabls({ animalId }: { animalId: string }) {
     <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
       <h2 className="mb-4 text-2xl font-semibold">Animal Audit Log</h2>
       <DataTable data={data} columns={animalAuditTableColumns} />
+    </div>
+  );
+}
+
+function AnimalHealthLogTable({ animalId }: { animalId: string }) {
+  const { data, isLoading } = useAnimalHealthLog(animalId);
+  if (isLoading) return <Loading />;
+
+  return (
+    <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
+      <div className="flex w-full items-center justify-between gap-2 mb-4">
+        <h2 className="mb-4 text-2xl font-semibold">Health Log</h2>
+        <NewHealthLogModel animalId={animalId} />
+      </div>
+      <DataTable data={data!} columns={animalHealthLogTableColumns} />
     </div>
   );
 }
@@ -257,7 +269,10 @@ function AnimalAvailabilitySwitch({
       toast.error(res.data.detail);
     }
 
-    queryClient.invalidateQueries({ queryKey: ["animal", animalId] });
+    queryClient.invalidateQueries({ queryKey: ["animal_details", animalId] });
+    queryClient.invalidateQueries({ queryKey: ["animal_status"] });
+    queryClient.invalidateQueries({ queryKey: ["animal_audit", animalId] });
+
     setLoading(false);
   };
 

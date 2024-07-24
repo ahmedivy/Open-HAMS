@@ -11,7 +11,7 @@ export const animalTableColumns: ColumnDef<Animal>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
     cell: ({ row }) => (
       <Avatar className="m-2">
-        <AvatarImage src="/placeholder-avatar.png" alt={row.getValue("name")} />
+        <AvatarImage src={row.getValue("image")} alt={row.getValue("name")} />
         <AvatarFallback>{row.original.name[0]}</AvatarFallback>
       </Avatar>
     ),
