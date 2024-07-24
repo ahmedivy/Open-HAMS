@@ -15,6 +15,9 @@ from models import (
     AnimalAuditWithDetails,
     AnimalEvent,
     AnimalEventWithDetails,
+    AnimalHealthLog,
+    AnimalHealthLogIn,
+    AnimalHealthLogWithDetails,
     AnimalIn,
     AnimalWithEvents,
     Event,
@@ -280,11 +283,33 @@ async def delete_animal(animal_id: int, session: SessionDep, current_user: Curre
         changed_by=current_user.id,
         action="animal_deleted",
         description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) deleted an animal with name {animal.name}",
-        commit=False,
     )
 
+    # delete animal events records
+    animal_events = await session.exec(
+        select(AnimalEvent).where(col(AnimalEvent.animal_id) == animal_id)
+    )
+    for animal_event in animal_events.unique():
+        await session.delete(animal_event)
+
+    # delete animal audits
+    audits = await session.exec(
+        select(AnimalAudit).where(col(AnimalAudit.animal_id) == animal_id)
+    )
+    for audit in audits.unique():
+        await session.delete(audit)
+
+    # delete animal health logs
+    logs = await session.exec(
+        select(AnimalHealthLog).where(col(AnimalHealthLog.animal_id) == animal_id)
+    )
+    for log in logs.unique():
+        await session.delete(log)
+
+    await session.refresh(animal)
     await session.delete(animal)
     await session.commit()
+
     return {"message": "Animal deleted"}
 
 
@@ -304,11 +329,11 @@ async def update_animal(
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
 
-    for field, value in animal_update.model_dump().items():
-        setattr(animal, field, value)
-
     # log audits for each field thats updated
     await log_fields_update(session, animal, animal_update, current_user)
+
+    for field, value in animal_update.model_dump().items():
+        setattr(animal, field, value)
 
     await session.commit()
     await session.refresh(animal)
@@ -330,6 +355,20 @@ async def mark_animal_unavailable(
 
     animal.status = "unavailable"
     await session.commit()
+    await session.refresh(animal)
+    await session.refresh(current_user)
+
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="animal_status_changed",
+        description="Admin marked animal as unavailable",
+        changed_field="status",
+        old_value="available",
+        new_value="unavailable",
+    )
+
     return JSONResponse(
         content={"message": "Animal marked unavailable"}, status_code=200
     )
@@ -350,6 +389,20 @@ async def mark_animal_available(
 
     animal.status = "checked_in"
     await session.commit()
+    await session.refresh(animal)
+    await session.refresh(current_user)
+
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="animal_status_changed",
+        description="Admin marked animal as available",
+        changed_field="status",
+        old_value="unavailable",
+        new_value="available",
+    )
+
     return JSONResponse(content={"message": "Animal marked available"}, status_code=200)
 
 
@@ -366,9 +419,109 @@ async def get_animal_audits(
         .where(col(AnimalAudit.animal_id) == animal_id)
         .order_by(desc(AnimalAudit.changed_at))
     )
-    audits = audits.all()
+    audits = audits.unique()
 
     return [
         AnimalAuditWithDetails(audit=audit, animal=audit.animal, user=audit.user)
         for audit in audits
     ]
+
+
+@router.get("/{animal_id}/health-log")
+async def get_animal_health_logs(
+    animal_id: int, session: SessionDep
+) -> list[AnimalHealthLogWithDetails]:
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    logs = await session.exec(
+        select(AnimalHealthLog)
+        .where(col(AnimalHealthLog.animal_id) == animal_id)
+        .order_by(desc(AnimalHealthLog.logged_at))
+    )
+    logs = logs.unique()
+
+    return [
+        AnimalHealthLogWithDetails(log=log, animal=log.animal, user=log.user)
+        for log in logs
+    ]
+
+
+@router.post("/{animal_id}/health-log")
+async def create_animal_health_log(
+    animal_id: int,
+    body: AnimalHealthLogIn,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    log = AnimalHealthLog(
+        details=body.details, logged_by=current_user.id, animal_id=animal_id
+    )  # type: ignore
+    session.add(log)
+    await session.commit()
+    await session.refresh(animal)
+    await session.refresh(log)
+
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="health_log_added",
+        description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) created a health log",
+        changed_field="health_log",
+        old_value=None,
+        new_value=log.details,
+    )
+
+    return JSONResponse(content={"message": "Health log created"}, status_code=200)
+
+
+@router.put("/{animal_id}/health-log/{log_id}")
+async def update_animal_health_log(
+    animal_id: int,
+    log_id: int,
+    body: AnimalHealthLogIn,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    log = (
+        await session.exec(
+            select(AnimalHealthLog).where(col(AnimalHealthLog.id) == log_id)
+        )
+    ).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Health log not found")
+
+    if log.logged_by != current_user.id:
+        raise HTTPException(
+            status_code=401, detail="You are not authorized to perform this action"
+        )
+
+    old_log = str(log.details)
+
+    log.details = body.details
+    await session.commit()
+    await session.refresh(animal)
+    await session.refresh(log)
+
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=current_user.id,
+        action="health_log_updated",
+        description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) updated a health log",
+        changed_field="health_log",
+        old_value=old_log,
+        new_value=body.details,
+    )
+
+    return JSONResponse(content={"message": "Health log updated"}, status_code=200)

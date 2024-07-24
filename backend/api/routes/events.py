@@ -8,7 +8,15 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, select
 
 from api.deps import CurrentUser, SessionDep
-from db.animals import get_animals_status, update_animals_status
+from db.animals import (
+    log_audit,
+    update_animals_status,
+    validate_animals,
+    validate_animals_availability,
+    validate_event_clashes,
+    validate_tiers,
+)
+from db.users import validate_check_in_out_permissions, validate_users
 from db.utils import has_permission
 from models import (
     Animal,
@@ -73,62 +81,24 @@ async def create_event(
     if len(users) != len(body.user_ids):
         raise HTTPException(status_code=404, detail="User not found")
 
-    print(users)
-
     # validate animals
-    animals = await session.exec(
-        select(Animal).where(
-            and_(
-                col(Animal.id).in_(body.animal_ids), Animal.zoo_id == body.event.zoo_id
-            )
-        )
+    animals = await validate_animals(
+        body.animal_ids, zoo_id=body.event.zoo_id, session=session
     )
-    animals = list(animals.all())
-    if len(animals) != len(body.animal_ids):
-        raise HTTPException(status_code=404, detail="Animal not found")
 
     # check if animals are already assigned to an event during this time
-    clashing_animals = await session.exec(
-        select(Animal.name)
-        .join(AnimalEvent)
-        .join(Event)
-        .where(
-            and_(
-                Event.start_at <= body.event.end_at,
-                Event.end_at >= body.event.start_at,
-                Event.zoo_id == body.event.zoo_id,
-                col(Animal.id).in_(body.animal_ids),
-            )
-        )
-        .group_by(Animal.name)
+    await validate_event_clashes(
+        body.animal_ids,
+        body.event.end_at,
+        body.event.start_at,
+        body.event.zoo_id,
+        session,
     )
-    clashing_animals = list(clashing_animals.all())
-    if clashing_animals:
-        raise HTTPException(
-            status_code=400,
-            detail="Some animals are already assigned to an event during this time",
-        )
 
     # validate checkouts if checkout_immediately
     if body.checkout_immediately:
-        for animal in animals:
-            if animal.handling_enabled and current_user.role.name != "handler":
-                raise HTTPException(
-                    status_code=400,
-                    detail="You are not a handler and cannot checkout animals",
-                )
-
-            if animal.tier > current_user.tier:
-                raise HTTPException(
-                    status_code=401,
-                    detail="You do not have enough tier to checkout this animal",
-                )
-
-        animals_status = await get_animals_status(session, animal_ids=body.animal_ids)
-        if not all([animal.status == "available" for animal in animals_status]):
-            raise HTTPException(
-                status_code=400, detail="Some animals are not available to checkout"
-            )
+        await validate_tiers(animals, current_user)
+        await validate_animals_availability(body.animal_ids, session)
 
     event = Event(**body.event.model_dump())
     session.add(event)
@@ -157,10 +127,41 @@ async def create_event(
     await session.commit()
 
     # update animals status
-    await update_animals_status(body.animal_ids, "checked_out", session)
+    if body.checkout_immediately:
+        await update_animals_status(body.animal_ids, "checked_out", session)
+
+    # refresh event
+    await session.refresh(event)
+    await session.refresh(current_user)
+
+    # create audit logs for animals assignment
+    if body.animal_ids:
+        for animal_id in body.animal_ids:
+            await log_audit(
+                session=session,
+                animal_id=animal_id,
+                changed_by=current_user.id,
+                action="event_participation_added",
+                commit=False,
+                description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) added animal to event '{event.name}'",
+            )
+
+    # create audit logs for animal checkout
+    if body.checkout_immediately:
+        for animal_id in body.animal_ids:
+            await log_audit(
+                session=session,
+                animal_id=animal_id,
+                changed_by=current_user.id,
+                action="checked_out",
+                commit=False,
+                description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) checked out animal to event '{event.name}'",
+            )
+
+    await session.commit()
     await session.refresh(event)
 
-    return event
+    return JSONResponse({"message": "Event created"}, status_code=200)
 
 
 @router.put("/{event_id}")
@@ -189,44 +190,22 @@ async def update_event(
         raise HTTPException(status_code=404, detail="Event type not found for this zoo")
 
     # validate users
-    users = await session.exec(select(User).where(col(User.id).in_(body.user_ids)))
-    users = list(users.unique())
-    if len(users) != len(body.user_ids):
-        raise HTTPException(status_code=404, detail="User not found")
+    users = await validate_users(body.user_ids, session)
 
     # validate animals
-    animals = await session.exec(
-        select(Animal).where(
-            and_(
-                col(Animal.id).in_(body.animal_ids), Animal.zoo_id == body.event.zoo_id
-            )
-        )
+    animals = await validate_animals(
+        body.animal_ids, zoo_id=body.event.zoo_id, session=session
     )
-    animals = animals.all()
-    if len(animals) != len(body.animal_ids):
-        raise HTTPException(status_code=404, detail="Animal not found")
 
     # check if animals are already assigned to an event during this time
-    clashing_animals = await session.exec(
-        select(Animal.name)
-        .join(AnimalEvent)
-        .join(Event)
-        .where(
-            and_(
-                Event.start_at <= body.event.end_at,
-                Event.end_at >= body.event.start_at,
-                Event.zoo_id == body.event.zoo_id,
-                col(Animal.id).in_(body.animal_ids),
-                Event.id != event_id,
-            )
-        )
-        .group_by(Animal.name)
+    await validate_event_clashes(
+        body.animal_ids,
+        body.event.end_at,
+        body.event.start_at,
+        body.event.zoo_id,
+        session,
+        event_id=event_id,
     )
-    if clashing_animals.all():
-        raise HTTPException(
-            status_code=400,
-            detail="Some animals are already assigned to an event during this time",
-        )
 
     for k, v in body.event.model_dump().items():
         setattr(event, k, v)
@@ -235,13 +214,13 @@ async def update_event(
     existing_users = await session.exec(
         select(UserEvent).where(UserEvent.event_id == event_id)
     )
-    existing_users = existing_users.all()
+    existing_users = list(existing_users.all())
 
     # existing_animals
     existing_animals = await session.exec(
         select(AnimalEvent).where(AnimalEvent.event_id == event_id)
     )
-    existing_animals = existing_animals.all()
+    existing_animals = list(existing_animals.all())
 
     # to remove users
     to_remove_users = [
@@ -280,6 +259,27 @@ async def update_event(
     for animal in to_add_animals:
         animal_link = AnimalEvent(animal_id=animal, event_id=event_id)  # type: ignore
         session.add(animal_link)
+
+    # audit logs
+    for animal in to_remove_animals:
+        await log_audit(
+            session=session,
+            animal_id=animal.animal_id,
+            changed_by=current_user.id,
+            action="event_participation_removed",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) removed animal from event '{event.name}'",
+        )
+
+    for animal in to_add_animals:
+        await log_audit(
+            session=session,
+            animal_id=animal,
+            changed_by=current_user.id,
+            action="event_participation_added",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) added animal to event '{event.name}'",
+        )
 
     await session.commit()
     await session.refresh(event)
@@ -370,13 +370,7 @@ async def reassign_animals_to_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    animals = await session.exec(
-        select(Animal).where(col(Animal.id).in_(body.animal_ids))
-    )
-    animals = animals.all()
-
-    if not (len(animals) == len(body.animal_ids)):
-        raise HTTPException(status_code=404, detail="Animal not found")
+    animals = await validate_animals(body.animal_ids, session)
 
     # check if animals are already assigned to an event during this time
     clashing_animals = await session.exec(
@@ -431,6 +425,27 @@ async def reassign_animals_to_event(
     for animal_id in to_add_animal_ids:
         animal_link = AnimalEvent(animal_id=animal_id, event_id=event_id)  # type: ignore
         session.add(animal_link)
+
+    # audit logs
+    for animal in to_remove_animal_ids:
+        await log_audit(
+            session=session,
+            animal_id=animal,
+            changed_by=current_user.id,
+            action="event_participation_removed",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) removed animal from event '{event.name}'",
+        )
+
+    for animal in to_remove_animal_ids:
+        await log_audit(
+            session=session,
+            animal_id=animal,
+            changed_by=current_user.id,
+            action="event_participation_added",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) added animal to event '{event.name}'",
+        )
 
     await session.commit()
     await session.refresh(event)
@@ -549,7 +564,7 @@ async def checkin_animal(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not await validate_check_in_out_permissions(current_user, event_id, session):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -569,40 +584,29 @@ async def checkin_animal(
         .options(joinedload(AnimalEvent.animal))  # type: ignore
     )
     animals_link = list(animals_link.all())  # type: ignore
+    animals = [animal_link.animal for animal_link in animals_link]
 
-    if not len(animals_link) == len(body.animal_ids):
+    if not len(animals) == len(body.animal_ids):
         raise HTTPException(
             status_code=404, detail="Some animals are not assigned to this event"
         )
 
+    # check if already checked in or not checked out
     for animal_link in animals_link:
-        # if already checked in
         if animal_link.checked_in:
             raise HTTPException(
                 status_code=400,
                 detail=f"Animal {animal_link.animal.name} is already checked in",
             )
 
-        # if not checked out yet
         if not animal_link.checked_out:
             raise HTTPException(
                 status_code=400,
                 detail=f"Animal {animal_link.animal.name} is not checked out for this event",
             )
 
-        # if animal is not handling enabled
-        if animal_link.animal.handling_enabled and current_user.role.name != "handler":
-            raise HTTPException(
-                status_code=400,
-                detail="You are not authorized to perform this action",
-            )
-
-        # check animals and user tier
-        if animal_link.animal.tier > current_user.tier:
-            raise HTTPException(
-                status_code=401,
-                detail="You do not have enough tier to check in this animal",
-            )
+    # validate animals and user tier
+    await validate_tiers(animals, current_user)
 
     # finally checkin animals
     for animal_link in animals_link:
@@ -611,6 +615,51 @@ async def checkin_animal(
         animal_link.user_in_id = current_user.id
         animal_link.duration = now - animal_link.checked_out  # type: ignore
         session.add(animal_link)
+
+    await session.commit()
+    await session.refresh(event)
+
+    # update animals status and audit logs
+    await update_animals_status(body.animal_ids, "checked_in", session)
+
+    # refresh event and user
+    await session.refresh(event)
+    await session.refresh(current_user)
+
+    # create audit logs for animals assignment and animal status change
+    for animal_id in body.animal_ids:
+        # audit log for checkin
+        await log_audit(
+            session=session,
+            animal_id=animal_id,
+            changed_by=current_user.id,
+            action="checked_in",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) checked in animal to event '{event.name}'",
+        )
+
+        # audit log for animal status change
+        await log_audit(
+            session=session,
+            animal_id=animal_id,
+            changed_by=current_user.id,
+            action="animal_status_changed",
+            commit=False,
+            changed_field="status",
+            old_value="checked_out",
+            new_value="checked_in",
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) checked in animal to event '{event.name}'",
+        )
+
+        # audit log for rest time start
+        await log_audit(
+            session=session,
+            animal_id=animal_id,
+            changed_by=current_user.id,
+            action="rest_time_started",
+            commit=False,
+            description="Rest time started",
+        )
 
     await session.commit()
     await session.refresh(event)
@@ -625,7 +674,7 @@ async def checkout_animal(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not await validate_check_in_out_permissions(current_user, event_id, session):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -636,13 +685,7 @@ async def checkout_animal(
         raise HTTPException(status_code=404, detail="Event not found")
 
     # validate animals avaialability
-    animals_status = await get_animals_status(session, animal_ids=body.animal_ids)
-    for animal_status in animals_status:
-        if animal_status.status != "available":
-            raise HTTPException(
-                status_code=400,
-                detail=f"{animal_status.animal.name} is not available to checkout",
-            )
+    await validate_animals_availability(body.animal_ids, session)
 
     # validate that animals are assigned to this event
     animals_link: list[AnimalEvent] = await session.exec(
@@ -654,12 +697,14 @@ async def checkout_animal(
         .options(joinedload(AnimalEvent.animal))  # type: ignore
     )
     animals_link = list(animals_link.all())  # type: ignore
+    animals = [animal_link.animal for animal_link in animals_link]
 
     if not len(animals_link) == len(body.animal_ids):
         raise HTTPException(
             status_code=404, detail="Some animals are not assigned to this event"
         )
 
+    # check if already checked out
     for animal_link in animals_link:
         # if already checked out
         if animal_link.checked_out:
@@ -668,25 +713,49 @@ async def checkout_animal(
                 detail=f"Animal {animal_link.animal.name} is already checked out",
             )
 
-        # if handling enabled and not handler
-        if animal_link.animal.handling_enabled and current_user.role.name != "handler":
-            raise HTTPException(
-                status_code=400,
-                detail="You are not authorized to perform this action",
-            )
-
-        # check animals and user tier
-        if animal_link.animal.tier > current_user.tier:
-            raise HTTPException(
-                status_code=401,
-                detail="You do not have enough tier to checkout this animal",
-            )
+    # validate animals and user tier
+    await validate_tiers(animals, current_user)
 
     # finally checkout animals
     for animal_link in animals_link:
         animal_link.checked_out = datetime.now(UTC)
         animal_link.user_out_id = current_user.id
         session.add(animal_link)
+
+    await session.commit()
+    await session.refresh(event)
+
+    # update animals status
+    await update_animals_status(body.animal_ids, "checked_out", session)
+
+    # refresh event
+    await session.refresh(event)
+    await session.refresh(current_user)
+
+    # create audit logs for animals assignment
+    for animal_id in body.animal_ids:
+        # audit log for checkout
+        await log_audit(
+            session=session,
+            animal_id=animal_id,
+            changed_by=current_user.id,
+            action="checked_out",
+            commit=False,
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) checked out animal to event '{event.name}'",
+        )
+
+        # audit log for animal status change
+        await log_audit(
+            session=session,
+            animal_id=animal_id,
+            changed_by=current_user.id,
+            action="animal_status_changed",
+            commit=False,
+            changed_field="status",
+            old_value="checked_in",
+            new_value="checked_out",
+            description=f"{current_user.first_name} {current_user.last_name} ({current_user.role.name}) checked out animal to event '{event.name}'",
+        )
 
     await session.commit()
     await session.refresh(event)

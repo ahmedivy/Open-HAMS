@@ -7,6 +7,7 @@ from .routes.groups import router as groups_router
 from .routes.roles import router as roles_router
 from .routes.users import router as users_router
 from .routes.zoo import router as zoo_router
+from .routes.upload import router as upload_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,4 @@ api_router.include_router(events_router)
 api_router.include_router(event_types_router)
 api_router.include_router(groups_router)
 api_router.include_router(roles_router)
+api_router.include_router(upload_router)
