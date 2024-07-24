@@ -1,8 +1,7 @@
 import { logout } from "@/api/auth";
 import { useUser } from "@/api/queries";
-import { cn } from "@/utils";
+import { cn, getInitials } from "@/utils";
 import {
-  Activity,
   Calendar,
   Dog,
   EllipsisVertical,
@@ -76,8 +75,10 @@ export function Sidebar() {
       ) : (
         <Link className="mb-2 mt-auto flex w-full" to="/settings">
           <Avatar>
-            <AvatarImage src="/placeholder-avatar.png" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src={user?.image!} />
+            <AvatarFallback>
+              {getInitials(user?.first_name!, user?.last_name)}
+            </AvatarFallback>
           </Avatar>
           <div className="ml-2 flex flex-col">
             <span className="text-[14px] font-bold">{`${user?.first_name}`}</span>
