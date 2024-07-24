@@ -1,18 +1,19 @@
 import { components } from "./schema";
 
-export type User = components["schemas"]["UserWithDetails"];
-export type Role = components["schemas"]["RoleWithPermissions"];
-export type Zoo = components["schemas"]["Zoo"];
-export type Group = components["schemas"]["GroupWithZoo"];
-export type EventType = components["schemas"]["EventType"];
-export type Animal = components["schemas"]["Animal"];
-export type Event = components["schemas"]["Event"];
-export type EventWithDetails = components["schemas"]["EventWithDetails"];
+type schemas = components["schemas"];
 
+export type User = schemas["UserWithDetails"];
+export type Role = schemas["RoleWithPermissions"];
+export type Zoo = schemas["Zoo"];
+export type Group = schemas["GroupWithZoo"];
+export type EventType = schemas["EventType"];
+export type Animal = schemas["Animal"];
+export type Event = schemas["Event"];
+export type EventWithDetails = schemas["EventWithDetails"];
 export type EventWithDetailsAndComments =
-  components["schemas"]["EventWithDetailsAndComments"];
-
-export type AnimalWithEvents = components["schemas"]["AnimalWithEvents"];
-export type Comment = components["schemas"]["EventCommentWithUser"];
-export type AnimalEventWithDetails = components["schemas"]["AnimalEventWithDetails"];
-export type AnimalAuditWithDetails = components["schemas"]["AnimalAuditWithDetails"];
+  schemas["EventWithDetailsAndComments"];
+export type AnimalWithEvents = schemas["AnimalWithEvents"];
+export type Comment = schemas["EventCommentWithUser"];
+export type AnimalEventWithDetails = schemas["AnimalEventWithDetails"];
+export type AnimalAuditWithDetails = schemas["AnimalAuditWithDetails"];
+export type AnimalHealthLogWithDetails = schemas["AnimalHealthLogWithDetails"];

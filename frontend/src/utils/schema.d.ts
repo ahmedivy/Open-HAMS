@@ -250,23 +250,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/animals/{animal_id}/details": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Animal */
-        get: operations["get_animal_animals__animal_id__details_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/animals/{animal_id}": {
         parameters: {
             query?: never;
@@ -274,12 +257,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Animal */
+        get: operations["get_animal_animals__animal_id__get"];
         /** Update Animal */
         put: operations["update_animal_animals__animal_id__put"];
         post?: never;
         /** Delete Animal */
         delete: operations["delete_animal_animals__animal_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Animal Details */
+        get: operations["get_animal_details_animals__animal_id__details_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -326,9 +327,44 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
         /** Get Animal Audits */
-        put: operations["get_animal_audits_animals__animal_id__audits_put"];
+        get: operations["get_animal_audits_animals__animal_id__audits_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}/health-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Animal Health Logs */
+        get: operations["get_animal_health_logs_animals__animal_id__health_log_get"];
+        put?: never;
+        /** Create Animal Health Log */
+        post: operations["create_animal_health_log_animals__animal_id__health_log_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/{animal_id}/health-log/{log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Animal Health Log */
+        put: operations["update_animal_health_log_animals__animal_id__health_log__log_id__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -562,6 +598,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/upload/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload File */
+        post: operations["upload_file_upload__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/clear": {
         parameters: {
             query?: never;
@@ -713,6 +766,33 @@ export interface components {
             animal_event: components["schemas"]["AnimalEvent"];
             animal: components["schemas"]["Animal"];
         };
+        /** AnimalHealthLog */
+        AnimalHealthLog: {
+            /** Id */
+            id: number;
+            /** Animal Id */
+            animal_id: number;
+            /** Details */
+            details: string;
+            /**
+             * Logged At
+             * Format: date-time
+             */
+            logged_at?: string;
+            /** Logged By */
+            logged_by: number;
+        };
+        /** AnimalHealthLogIn */
+        AnimalHealthLogIn: {
+            /** Details */
+            details: string;
+        };
+        /** AnimalHealthLogWithDetails */
+        AnimalHealthLogWithDetails: {
+            user: components["schemas"]["UserPublic"];
+            log: components["schemas"]["AnimalHealthLog"];
+            animal: components["schemas"]["Animal"];
+        };
         /** AnimalIn */
         AnimalIn: {
             /** Name */
@@ -804,6 +884,14 @@ export interface components {
             client_id?: string | null;
             /** Client Secret */
             client_secret?: string | null;
+        };
+        /** Body_upload_file_upload__post */
+        Body_upload_file_upload__post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
         };
         /** Event */
         Event: {
@@ -1103,6 +1191,8 @@ export interface components {
              * @default 1
              */
             tier: number;
+            /** Image */
+            image?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -1144,6 +1234,8 @@ export interface components {
              * @default 1
              */
             tier: number;
+            /** Image */
+            image?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -1852,7 +1944,7 @@ export interface operations {
             };
         };
     };
-    get_animal_animals__animal_id__details_get: {
+    get_animal_animals__animal_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1869,7 +1961,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AnimalWithEvents"];
+                    "application/json": components["schemas"]["Animal"];
                 };
             };
             /** @description Validation Error */
@@ -1904,7 +1996,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Animal"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1936,6 +2028,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_animal_details_animals__animal_id__details_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnimalWithEvents"];
                 };
             };
             /** @description Validation Error */
@@ -2011,7 +2134,7 @@ export interface operations {
             };
         };
     };
-    get_animal_audits_animals__animal_id__audits_put: {
+    get_animal_audits_animals__animal_id__audits_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2029,6 +2152,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnimalAuditWithDetails"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_animal_health_logs_animals__animal_id__health_log_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnimalHealthLogWithDetails"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_animal_health_log_animals__animal_id__health_log_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnimalHealthLogIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_animal_health_log_animals__animal_id__health_log__log_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animal_id: number;
+                log_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnimalHealthLogIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2599,6 +2824,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoleWithPermissions"][];
+                };
+            };
+        };
+    };
+    upload_file_upload__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_file_upload__post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
