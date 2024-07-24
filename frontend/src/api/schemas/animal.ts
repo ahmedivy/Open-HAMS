@@ -19,4 +19,11 @@ export const animalSchema = z.object({
   zoo_id: z.string({ message: "Zoo is required" }),
 });
 
+export const animalHealthLogSchema = z.object({
+  details: z
+    .string({ message: "Details are required" })
+    .min(10, "Details must be more than 10 characters"),
+});
+
 export type AnimalSchema = z.infer<typeof animalSchema>;
+export type AnimalHealthLogSchema = z.infer<typeof animalHealthLogSchema>;

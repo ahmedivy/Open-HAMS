@@ -1,10 +1,11 @@
 import {
   Animal,
   AnimalAuditWithDetails,
+  AnimalHealthLogWithDetails,
   AnimalWithEvents,
 } from "@/utils/types";
 import instance from "./axios";
-import { AnimalSchema } from "./schemas/animal";
+import { AnimalHealthLogSchema, AnimalSchema } from "./schemas/animal";
 
 export async function getAnimals() {
   const res = await instance.get("/animals");
@@ -25,6 +26,11 @@ export async function getAnimal(animalId: string) {
   const res = await instance.get(`/animals/${animalId}`);
   if (res.status !== 200) throw new Error(res.data);
   return res.data as Animal;
+}
+
+export async function deleteAnimal(animalId: string) {
+  const res = await instance.delete(`/animals/${animalId}`);
+  return res;
 }
 
 export async function getAnimalDetails(animalId: string) {
@@ -62,6 +68,31 @@ export async function makeAnimalAvailable(animalId: string) {
 }
 
 export async function getAnimalAuditLog(animalId: string) {
-const res = await instance.get(`/animals/${animalId}/audits`);
+  const res = await instance.get(`/animals/${animalId}/audits`);
   return res.data as AnimalAuditWithDetails[];
+}
+
+export async function getAnimalHealthLog(animalId: string) {
+  const res = await instance.get(`/animals/${animalId}/health-log`);
+  return res.data as AnimalHealthLogWithDetails[];
+}
+
+export async function createAnimalHealthLog(
+  animalId: string,
+  details: AnimalHealthLogSchema,
+) {
+  const res = await instance.post(`/animals/${animalId}/health-log`, details);
+  return res;
+}
+
+export async function updateAnimalHealthLog(
+  animalId: string,
+  logId: string,
+  details: AnimalHealthLogSchema,
+) {
+  const res = await instance.put(
+    `/animals/${animalId}/health-log/${logId}`,
+    details,
+  );
+  return res;
 }

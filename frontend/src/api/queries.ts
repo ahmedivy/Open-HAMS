@@ -6,6 +6,7 @@ import {
   getAnimal,
   getAnimalAuditLog,
   getAnimalDetails,
+  getAnimalHealthLog,
   getAnimalsWithStatus,
 } from "@/api/animals";
 import { getGroups } from "@/api/group";
@@ -14,6 +15,7 @@ import { getZoos } from "@/api/zoo";
 import {
   Animal,
   AnimalAuditWithDetails,
+  AnimalHealthLogWithDetails,
   AnimalWithEvents,
   EventWithDetails,
   Group,
@@ -106,7 +108,14 @@ export function useEvent(eventId: string) {
 
 export function useAnimalAuditLog(animalId: string) {
   return useQuery<AnimalAuditWithDetails[]>({
-    queryKey: ["animal-audit", animalId],
+    queryKey: ["animal_audit", animalId],
     queryFn: () => getAnimalAuditLog(animalId),
+  });
+}
+
+export function useAnimalHealthLog(animalId: string) {
+  return useQuery<AnimalHealthLogWithDetails[]>({
+    queryKey: ["animal_health_log", animalId],
+    queryFn: () => getAnimalHealthLog(animalId),
   });
 }
