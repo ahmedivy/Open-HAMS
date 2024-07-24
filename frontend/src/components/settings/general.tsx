@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
+import { useUser } from "@/api/queries";
 import {
   changePasswordFormSchema,
   ChangePasswordSchema,
@@ -18,10 +19,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/api/queries";
+import { getInitials } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
+import { toast } from "sonner";
 import { Spinner } from "../icons";
 import {
   Select,
@@ -31,7 +33,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Switch } from "../ui/switch";
-import { toast } from "sonner";
 
 export function GeneralSettings() {
   const { data: user } = useUser();
@@ -94,7 +95,10 @@ export function GeneralSettings() {
         <TabsContent value="userPreferences">
           <div className="mt-10 flex max-w-[500px] flex-col p-6">
             <Avatar className="size-32">
-              <AvatarImage src="/placeholder-avatar.png?name=John+Doe" />
+              <AvatarImage src={user?.image!} />
+              <AvatarFallback className="text-3xl">
+                {getInitials(user?.first_name!, user?.last_name)}
+              </AvatarFallback>
             </Avatar>
             <h1 className="mt-6 text-xl font-bold">Update Profile</h1>
             <p className="mt-3 text-muted-foreground">Personal Information</p>
