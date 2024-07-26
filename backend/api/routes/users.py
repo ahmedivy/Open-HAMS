@@ -1,7 +1,7 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Query, status
+from fastapi import APIRouter, Body, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import select
@@ -13,11 +13,12 @@ from core.security import (
     get_password_hash,
     verify_password,
 )
+from db.events import get_events_details
 from db.roles import get_role
 from db.users import get_user_by_email, get_user_by_id, get_user_by_username
 from db.utils import has_permission
 from db.zoo import get_main_zoo
-from models import User, UserWithDetails
+from models import Event, User, UserEvent, UserWithDetails, UserWithEvents
 from schemas import RoleIn, TierIn, Token, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -135,13 +136,36 @@ async def get_authenticated_user_permissions(current_user: CurrentUser):
 
 
 @router.get("/{user_id}")
-async def get_user(
-    user_id: int, session: SessionDep, _: CurrentUser
-) -> UserWithDetails:
+async def get_user(user_id: int, session: SessionDep, _: CurrentUser) -> UserWithEvents:
     user = await get_user_by_id(user_id, session)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user  # type: ignore
+
+    events = await session.exec(
+        select(Event).join(UserEvent).where(UserEvent.user_id == user_id)
+    )
+    events = list(events.all())
+
+    events_details = await get_events_details(session=session, events=events)
+
+    current, past, upcoming = [], [], []
+
+    current_time = datetime.now(UTC)
+
+    for event in events_details:
+        if event.event.start_at <= current_time <= event.event.end_at:
+            current.append(event)
+        elif event.event.end_at < current_time:
+            past.append(event)
+        elif event.event.start_at > current_time:
+            upcoming.append(event)
+
+    return UserWithEvents(
+        user=user, # type: ignore
+        current_events=current,
+        past_events=past,
+        upcoming_events=upcoming,
+    )
 
 
 @router.delete("/{user_id}")

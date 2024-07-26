@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -16,6 +16,7 @@ from db.animals import (
     validate_event_clashes,
     validate_tiers,
 )
+from db.events import get_events_details
 from db.users import validate_check_in_out_permissions, validate_users
 from db.utils import has_permission
 from models import (
@@ -27,6 +28,7 @@ from models import (
     EventCreate,
     EventType,
     EventWithDetails,
+    EventWithDetailsAndComments,
     Role,
     User,
     UserEvent,
@@ -52,6 +54,62 @@ async def read_all_events(session: SessionDep):
         {"event": event, "animal_count": animal_count, "event_type": event_type}
         for event, event_type, animal_count in events
     ]
+
+
+@router.get("/details")
+async def get_events_details_by_date(
+    session: SessionDep,
+    _date: date = Query(
+        ..., description="Date to filter events", default_factory=lambda: date.today()
+    ),
+) -> list[EventWithDetailsAndComments]:
+    query = (
+        select(
+            Event,
+        )
+        .where(
+            and_(func.date(Event.start_at) <= _date, func.date(Event.end_at) >= _date)
+        )
+        .options(
+            joinedload(Event.event_type),  # type: ignore
+            joinedload(Event.zoo),  # type: ignore
+        )
+    )
+    events = list((await session.exec(query)).all())
+    return await get_events_details(session, events)
+
+
+class GetUpcomingLiveEvents(BaseModel):
+    live: list[EventWithDetailsAndComments]
+    upcoming: list[EventWithDetailsAndComments]
+
+
+@router.get("/details/upcoming-live")
+async def get_upcoming_live_events(
+    session: SessionDep,
+) -> GetUpcomingLiveEvents:
+    now = datetime.now(UTC)
+    query = (
+        select(
+            Event,
+        )
+        .where(Event.end_at > now)
+        .options(
+            joinedload(Event.event_type),  # type: ignore
+            joinedload(Event.zoo),  # type: ignore
+        )
+    )
+    events = list((await session.exec(query)).all())
+    events_details = await get_events_details(session, events)
+
+    live, upcoming = [], []
+    for event in events_details:
+        if event.event.start_at <= now <= event.event.end_at:
+            live.append(event)
+        else:
+            upcoming.append(event)
+
+    return GetUpcomingLiveEvents(live=live, upcoming=upcoming)
 
 
 @router.post("/")
@@ -190,12 +248,10 @@ async def update_event(
         raise HTTPException(status_code=404, detail="Event type not found for this zoo")
 
     # validate users
-    users = await validate_users(body.user_ids, session)
+    await validate_users(body.user_ids, session)
 
     # validate animals
-    animals = await validate_animals(
-        body.animal_ids, zoo_id=body.event.zoo_id, session=session
-    )
+    await validate_animals(body.animal_ids, zoo_id=body.event.zoo_id, session=session)
 
     # check if animals are already assigned to an event during this time
     await validate_event_clashes(

@@ -16,7 +16,7 @@ export function LiveFeed() {
   ];
 
   return (
-    <ScrollArea className="h-[450px] rounded-lg border bg-white p-4 shadow-sm lg:p-8">
+    <ScrollArea className="col-span-2 h-[480px] rounded-lg border bg-white p-4 shadow-sm lg:p-8">
       <h2 className="text-lg font-bold text-foreground">Activity Feed</h2>
       <div className="mb-6 mt-4 space-y-4 lg:max-w-[450px]">
         <h2 className="text-lg text-foreground">Today</h2>
@@ -36,7 +36,7 @@ export function LiveFeed() {
   );
 }
 
-function ActivityItem({ feed }) {
+function ActivityItem({ feed }: { feed: any }) {
   return (
     <div className="flex items-center gap-4 rounded-sm border p-2 px-4">
       <div className="flex items-center justify-center rounded-full bg-[#E6EEF5] p-4">

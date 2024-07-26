@@ -286,6 +286,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/animals/details/resting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Resting Animals */
+        get: operations["get_resting_animals_animals_details_resting_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/animals/details/checkedout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Checked Out Animals */
+        get: operations["get_checked_out_animals_animals_details_checkedout_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/animals/{animal_id}/unavailable": {
         parameters: {
             query?: never;
@@ -384,6 +418,40 @@ export interface paths {
         put?: never;
         /** Create Event */
         post: operations["create_event_events__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Events Details By Date */
+        get: operations["get_events_details_by_date_events_details_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/details/upcoming-live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upcoming Live Events */
+        get: operations["get_upcoming_live_events_events_details_upcoming_live_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -842,6 +910,26 @@ export interface components {
             /** Zoo Id */
             zoo_id: number;
         };
+        /** AnimalStatus */
+        AnimalStatus: {
+            animal: components["schemas"]["Animal"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "checked_out" | "unavailable";
+            /** Status Description */
+            status_description: string;
+            /** Daily Event Count */
+            daily_event_count: number;
+            /** Daily Event Duration */
+            daily_event_duration: number;
+        };
+        /** AnimalWithCurrentEvent */
+        AnimalWithCurrentEvent: {
+            animal: components["schemas"]["Animal"];
+            current_event: components["schemas"]["EventWithDetailsAndComments"];
+        };
         /** AnimalWithEvents */
         AnimalWithEvents: {
             animal: components["schemas"]["Animal"];
@@ -856,6 +944,8 @@ export interface components {
             daily_checkout_count: number;
             /** Daily Checkout Duration */
             daily_checkout_duration: number;
+            /** Weekly Event Activity Hours */
+            weekly_event_activity_hours: number;
         };
         /** AssignAnimalsIn */
         AssignAnimalsIn: {
@@ -1043,6 +1133,13 @@ export interface components {
             /** Comments */
             comments: components["schemas"]["EventCommentWithUser"][];
         };
+        /** GetUpcomingLiveEvents */
+        GetUpcomingLiveEvents: {
+            /** Live */
+            live: components["schemas"]["EventWithDetailsAndComments"][];
+            /** Upcoming */
+            upcoming: components["schemas"]["EventWithDetailsAndComments"][];
+        };
         /** Group */
         Group: {
             /** Title */
@@ -1100,6 +1197,18 @@ export interface components {
             id?: number | null;
             /** Name */
             name: string;
+        };
+        /** RestingAnimal */
+        RestingAnimal: {
+            animal_status: components["schemas"]["AnimalStatus"];
+            /** Daily Checkout Count */
+            daily_checkout_count: number;
+            /** Weekly Event Activity Hours */
+            weekly_event_activity_hours: number;
+            /** Daily Checkout Duration */
+            daily_checkout_duration: number;
+            /** Health Logs */
+            health_logs: components["schemas"]["AnimalHealthLogWithDetails"][];
         };
         /** RoleIn */
         RoleIn: {
@@ -1255,6 +1364,16 @@ export interface components {
             role?: components["schemas"]["RoleWithPermissions"] | null;
             group?: components["schemas"]["Group"] | null;
             zoo?: components["schemas"]["Zoo"] | null;
+        };
+        /** UserWithEvents */
+        UserWithEvents: {
+            user: components["schemas"]["UserWithDetails"];
+            /** Upcoming Events */
+            upcoming_events: components["schemas"]["EventWithDetailsAndComments"][];
+            /** Current Events */
+            current_events: components["schemas"]["EventWithDetailsAndComments"][];
+            /** Past Events */
+            past_events: components["schemas"]["EventWithDetailsAndComments"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -1520,7 +1639,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserWithDetails"];
+                    "application/json": components["schemas"]["UserWithEvents"];
                 };
             };
             /** @description Validation Error */
@@ -2072,6 +2191,46 @@ export interface operations {
             };
         };
     };
+    get_resting_animals_animals_details_resting_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestingAnimal"][];
+                };
+            };
+        };
+    };
+    get_checked_out_animals_animals_details_checkedout_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnimalWithCurrentEvent"][];
+                };
+            };
+        };
+    };
     mark_animal_unavailable_animals__animal_id__unavailable_put: {
         parameters: {
             query?: never;
@@ -2316,6 +2475,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_events_details_by_date_events_details_get: {
+        parameters: {
+            query?: {
+                /** @description Date to filter events */
+                _date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventWithDetailsAndComments"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upcoming_live_events_events_details_upcoming_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetUpcomingLiveEvents"];
                 };
             };
         };

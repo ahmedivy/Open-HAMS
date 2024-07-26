@@ -1,4 +1,4 @@
-import { User } from "@/utils/types";
+import { User, UserWithEvents } from "@/utils/types";
 import instance from "./axios";
 import { UpdateProfileSchema } from "./schemas/auth";
 
@@ -27,7 +27,7 @@ export async function getUsers() {
 
 export async function getUser(userId: number) {
   const res = await instance.get(`/users/${userId}/`);
-  return res.data as User;
+  return res.data as UserWithEvents;
 }
 
 export async function updateRole(userId: number, role: string) {

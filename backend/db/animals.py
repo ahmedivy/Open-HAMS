@@ -5,11 +5,14 @@ from fastapi import HTTPException
 from sqlalchemy import func
 from sqlmodel import and_, col, desc, select
 
+from core.utils import time_since
 from models import (
     Animal,
     AnimalActitvityLog,
     AnimalAudit,
     AnimalEvent,
+    AnimalHealthLog,
+    AnimalHealthLogWithDetails,
     AnimalIn,
     AnimalStatus,
     Event,
@@ -86,9 +89,7 @@ async def get_animals_status(
                     ) - datetime.now(UTC)
 
                     status = "unavailable"
-                    status_description = (
-                        f"Resting for {hours_left / timedelta(hours=1)} hours"
-                    )
+                    status_description = f"Resting for {time_since(hours_left)}"
                 else:
                     status = "available"
                     status_description = "Animal is available for check-out"
@@ -103,7 +104,14 @@ async def get_animals_status(
 
         animal_status.append(
             AnimalStatus(
-                animal=animal, status=status, status_description=status_description
+                animal=animal,
+                status=status,
+                status_description=status_description,
+                daily_event_count=daily_event_count,
+                daily_event_duration=(
+                    daily_event_duration or timedelta(0)
+                ).total_seconds()
+                / 3600,
             )
         )
 
@@ -309,3 +317,21 @@ async def validate_animals_availability(animal_ids: list[int], session):
             )
 
     return
+
+
+async def retrieve_animal_logs(animal_id: int, session):
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    logs = await session.exec(
+        select(AnimalHealthLog)
+        .where(col(AnimalHealthLog.animal_id) == animal_id)
+        .order_by(desc(AnimalHealthLog.logged_at))
+    )
+    logs = logs.unique()
+
+    return [
+        AnimalHealthLogWithDetails(log=log, animal=log.animal, user=log.user)
+        for log in logs
+    ]

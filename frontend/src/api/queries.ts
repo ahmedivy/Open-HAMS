@@ -1,4 +1,10 @@
-import { EventWithCount, getEventDetails, getEvents } from "@/api/event";
+import {
+  EventWithCount,
+  getEventDetails,
+  getEvents,
+  getEventsDetails,
+  getUpcomingLiveEvents,
+} from "@/api/event";
 import { useQuery } from "react-query";
 
 import type { AnimalStatus } from "@/api/animals";
@@ -8,6 +14,8 @@ import {
   getAnimalDetails,
   getAnimalHealthLog,
   getAnimalsWithStatus,
+  getCheckedOutAnimals,
+  getRestingAnimals,
 } from "@/api/animals";
 import { getGroups } from "@/api/group";
 import { getAuthenticatedUser, getHandlers } from "@/api/user";
@@ -16,9 +24,13 @@ import {
   Animal,
   AnimalAuditWithDetails,
   AnimalHealthLogWithDetails,
+  AnimalWithCurrentEvent,
   AnimalWithEvents,
   EventWithDetails,
+  EventWithDetailsAndComments,
   Group,
+  RestingAnimal,
+  UpcomingLiveEvents,
   User,
   Zoo,
 } from "@/utils/types";
@@ -52,6 +64,13 @@ export function useEvents() {
   return useQuery<EventWithCount[]>({
     queryKey: ["events"],
     queryFn: getEvents,
+  });
+}
+
+export function useEventsDetails(date: Date) {
+  return useQuery<EventWithDetailsAndComments[]>({
+    queryKey: ["events_details", date.toISOString()],
+    queryFn: () => getEventsDetails(date),
   });
 }
 
@@ -117,5 +136,26 @@ export function useAnimalHealthLog(animalId: string) {
   return useQuery<AnimalHealthLogWithDetails[]>({
     queryKey: ["animal_health_log", animalId],
     queryFn: () => getAnimalHealthLog(animalId),
+  });
+}
+
+export function useUpcomingLiveEvents() {
+  return useQuery<UpcomingLiveEvents>({
+    queryKey: ["upcomingLiveEvents"],
+    queryFn: getUpcomingLiveEvents,
+  });
+}
+
+export function useCheckedoutAnimals() {
+  return useQuery<AnimalWithCurrentEvent[]>({
+    queryFn: () => getCheckedOutAnimals(),
+    queryKey: ["checkedoutAnimals"],
+  });
+}
+
+export function useRestingAnimals() {
+  return useQuery<RestingAnimal[]>({
+    queryFn: () => getRestingAnimals(),
+    queryKey: ["restingAnimals"],
   });
 }

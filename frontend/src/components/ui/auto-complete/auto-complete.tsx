@@ -109,8 +109,8 @@ export const AutoComplete = ({
   );
 
   return (
-    <CommandPrimitive onKeyDown={handleKeyDown}>
-      <div>
+    <CommandPrimitive onKeyDown={handleKeyDown} className="w-full">
+      <div className="w-full">
         <CommandInput
           ref={inputRef}
           value={inputValue}
@@ -119,7 +119,7 @@ export const AutoComplete = ({
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
-          className="text-base"
+          className="text-base w-full"
         />
       </div>
       <div className="relative mt-1">

@@ -2,7 +2,9 @@ import {
   Animal,
   AnimalAuditWithDetails,
   AnimalHealthLogWithDetails,
+  AnimalWithCurrentEvent,
   AnimalWithEvents,
+  RestingAnimal,
 } from "@/utils/types";
 import instance from "./axios";
 import { AnimalHealthLogSchema, AnimalSchema } from "./schemas/animal";
@@ -95,4 +97,14 @@ export async function updateAnimalHealthLog(
     details,
   );
   return res;
+}
+
+export async function getCheckedOutAnimals() {
+  const res = await instance.get("/animals/details/checkedout");
+  return res.data as AnimalWithCurrentEvent[];
+}
+
+export async function getRestingAnimals() {
+  const res = await instance.get("/animals/details/resting");
+  return res.data as RestingAnimal[];
 }

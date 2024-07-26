@@ -102,7 +102,9 @@ export function AnimalDetailsPage() {
             <Card className="gap-2">
               <CardHeading>Weekly Event Acitivity</CardHeading>
               <CardDetails className="flex flex-col gap-0 text-black">
-                <span className="">{data.daily_checkout_duration.toFixed(2)}</span>
+                <span className="">
+                  {data.weekly_event_activity_hours.toFixed(2)}
+                </span>
                 <span className="text-sm font-light">hours</span>
               </CardDetails>
             </Card>
@@ -233,7 +235,7 @@ function AnimalHealthLogTable({ animalId }: { animalId: string }) {
 
   return (
     <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
-      <div className="flex w-full items-center justify-between gap-2 mb-4">
+      <div className="mb-4 flex w-full items-center justify-between gap-2">
         <h2 className="mb-4 text-2xl font-semibold">Health Log</h2>
         <NewHealthLogModel animalId={animalId} />
       </div>

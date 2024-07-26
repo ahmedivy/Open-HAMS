@@ -13,13 +13,14 @@ export function AnimalsSelect(props: {
   selectedAnimals: string[];
   setSelectedAnimals: (value: string[]) => void;
   animalsDetails?: AnimalEventWithDetails[];
+  title?: string;
 }) {
   const animals = useAnimalStatus();
   if (animals.isLoading) return <LoadingDots />;
 
   return (
     <CustomSelect
-      label="Animals"
+      label={props.title || "Animals"}
       placeholder="Search animals"
       options={animals.data!.map((animal_info) => ({
         value: animal_info.animal.id.toString(),

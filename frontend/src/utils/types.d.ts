@@ -17,3 +17,9 @@ export type Comment = schemas["EventCommentWithUser"];
 export type AnimalEventWithDetails = schemas["AnimalEventWithDetails"];
 export type AnimalAuditWithDetails = schemas["AnimalAuditWithDetails"];
 export type AnimalHealthLogWithDetails = schemas["AnimalHealthLogWithDetails"];
+export type UpcomingLiveEvents = schemas["GetUpcomingLiveEvents"];
+export type AnimalWithCurrentEvent = schemas["AnimalWithCurrentEvent"];
+export type RestingAnimal = schemas["RestingAnimal"];
+
+export type HealthLog = schemas["AnimalHealthLogWithDetails"];
+export type UserWithEvents = schemas["UserWithEvents"];

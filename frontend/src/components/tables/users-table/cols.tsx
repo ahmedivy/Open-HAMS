@@ -1,9 +1,7 @@
 import { capitalize, getInitials } from "@/utils";
 import { User } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import { Badge } from "../../ui/badge";
 import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 export const columns: ColumnDef<User>[] = [
@@ -63,42 +61,29 @@ export const columns: ColumnDef<User>[] = [
     accessorFn: (row) => capitalize(row.role?.name!),
   },
   {
-    id: "lastAction",
+    id: "group",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Action" />
+      <DataTableColumnHeader column={column} title="Group" />
     ),
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue("lastAction")}</span>
+          <span>{row.getValue("group")}</span>
         </div>
       );
     },
-    accessorFn: (row) => "N/A",
+    accessorFn: (row) => row.group?.title || "N/A",
   },
+
   {
-    id: "actionDate",
+    id: "zooName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Action Date" />
+      <DataTableColumnHeader column={column} title="Zoo Name" />
     ),
     cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue("actionDate")}</span>
-        </div>
-      );
+      return <p>{row.getValue("zooName")}</p>;
     },
-    accessorFn: (row) => new Date(row.updated_at).toLocaleDateString(),
-  },
-  {
-    id: "deptName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Department Name" />
-    ),
-    cell: ({ row }) => {
-      return <p>{row.getValue("deptName")}</p>;
-    },
-    accessorFn: (row) => "Hoggle Zoo",
+    accessorFn: (row) => row.zoo?.name || "N/A",
   },
   {
     id: "createdAt",
@@ -114,12 +99,12 @@ export const columns: ColumnDef<User>[] = [
     },
     accessorFn: (row) => new Date(row.created_at).toLocaleDateString(),
   },
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <Badge variant="secondary" className="font-thin">
-        <Link to={`/users/${row.original.id}`}>edit</Link>
-      </Badge>
-    ),
-  },
+  // {
+  //   id: "actions",
+  //   cell: ({ row }) => (
+  //     <Badge variant="secondary" className="font-thin">
+  //       <Link to={`/users/${row.original.id}`}>edit</Link>
+  //     </Badge>
+  //   ),
+  // },
 ];

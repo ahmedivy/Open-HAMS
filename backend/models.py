@@ -428,6 +428,11 @@ class EventWithDetailsAndComments(BaseModel):
     comments: list[EventCommentWithUser]
 
 
+class AnimalWithCurrentEvent(BaseModel):
+    animal: Animal
+    current_event: EventWithDetailsAndComments
+
+
 class AnimalWithEvents(BaseModel):
     animal: Animal
     upcoming_events: list[EventWithDetailsAndComments]
@@ -436,12 +441,22 @@ class AnimalWithEvents(BaseModel):
     zoo: Zoo
     daily_checkout_count: int
     daily_checkout_duration: float
+    weekly_event_activity_hours: float
+
+
+class UserWithEvents(BaseModel):
+    user: UserWithDetails
+    upcoming_events: list[EventWithDetailsAndComments]
+    current_events: list[EventWithDetailsAndComments]
+    past_events: list[EventWithDetailsAndComments]
 
 
 class AnimalStatus(BaseModel):
     animal: Animal
     status: Literal["available", "checked_out", "unavailable"]
     status_description: str
+    daily_event_count: int
+    daily_event_duration: float
 
 
 class AnimalAuditWithDetails(BaseModel):
@@ -454,3 +469,11 @@ class AnimalHealthLogWithDetails(BaseModel):
     user: UserPublic
     log: AnimalHealthLog
     animal: Animal
+
+
+class RestingAnimal(BaseModel):
+    animal_status: AnimalStatus
+    daily_checkout_count: int
+    weekly_event_activity_hours: float
+    daily_checkout_duration: float
+    health_logs: list[AnimalHealthLogWithDetails]
