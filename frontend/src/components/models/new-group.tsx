@@ -8,14 +8,14 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { createGroup } from "@/api/group";
-import { GroupSchema, groupSchema } from "@/api/schemas/group";
 import { useZoos } from "@/api/queries";
+import { GroupSchema, groupSchema } from "@/api/schemas/group";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "react-query";
 import { toast } from "sonner";
-import { LoadingDots } from "../icons";
+import { LoadingDots, Spinner } from "../icons";
 import {
   Form,
   FormControl,
@@ -75,7 +75,12 @@ export function NewGroupModel() {
             >
               <div className="flex items-center justify-between">
                 <DialogTitle>Add New Group</DialogTitle>
-                <Button size="sm">Submit</Button>
+                <Button size="sm" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && (
+                    <Spinner className="mr-2 size-4" />
+                  )}
+                  Submit
+                </Button>
               </div>
               <FormField
                 control={form.control}
