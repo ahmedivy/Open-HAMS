@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import select
+
 from api import api_router
 from api.deps import SessionDep
 from api.seed import create_admin, create_zoo, seed_db
 from core.config import settings
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from models import Permission, Role, RolePermission, User
-from sqlmodel import select
 
 
 @asynccontextmanager
@@ -17,8 +18,6 @@ async def lifespan(app: FastAPI):
     await create_admin()
     yield
 
-
-# Add cors
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=lifespan)
 
