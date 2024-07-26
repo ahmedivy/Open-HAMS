@@ -4,16 +4,16 @@ import { Menu } from "lucide-react";
 
 import { useEvents } from "@/api/queries";
 import { NewEventModel } from "@/components/events/new-event-model";
-import { LoadingDots } from "@/components/icons";
 import { Sidebar } from "@/components/sidebar";
-import { EventTableToolbar } from "@/components/tables/events-table/toolbar";
 import { eventTableColumns } from "@/components/tables/events-table/col";
+import { EventTableToolbar } from "@/components/tables/events-table/toolbar";
 import { DataTable } from "@/components/tables/table-commons/data-table";
+import { Loading } from "@/routes/loading";
 
 export function EventsPage() {
   const { data: events, isLoading } = useEvents();
 
-  if (isLoading) return <LoadingDots />;
+  if (isLoading) return <Loading />;
 
   return (
     <>

@@ -5,6 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { useGroups, useRoles } from "@/api/queries";
 import { updateGroup, updateRole, updateTier } from "@/api/user";
+import { LoadingDots } from "@/components/icons";
 import {
   Select,
   SelectContent,
@@ -32,7 +33,7 @@ const RolesSelect = (props: { currentRole: string; id: number }) => {
   });
 
   if (isLoading) {
-    return null;
+    return <LoadingDots />;
   }
 
   return (
@@ -121,7 +122,7 @@ const GroupSelect = (props: { currentGroupId: number; id: number }) => {
   });
 
   if (isLoading) {
-    return null;
+    return <LoadingDots />;
   }
 
   return (
@@ -193,14 +194,6 @@ export const userManagementColumns: ColumnDef<User>[] = [
       );
     },
     enableSorting: true,
-    // filterFn: (row, id, value) => {
-    //   return `${row.original.first_name} ${row.original.last_name}`
-    //     .toLowerCase()
-    //     .includes(value.toLowerCase());
-    // },
-    // sortingFn: (a, b, id) => {
-    //   return a.original.first_name.localeCompare(b.original.first_name);
-    // },
     accessorFn: (row) => `${row.first_name} ${row.last_name}`,
   },
   {
@@ -218,7 +211,6 @@ export const userManagementColumns: ColumnDef<User>[] = [
     },
     filterFn: (row, id, value) => {
       console.log(row.original.role?.name, value);
-      // return row.original.role?.name === value;
       return value.includes(row.original.role?.name!);
     },
     accessorFn: (row) => row.role?.name,
