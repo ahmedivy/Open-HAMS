@@ -137,7 +137,7 @@ export function AnimalForm(props: {
     },
   });
 
-  if (isLoading || form.formState.isLoading) return <LoadingDots />;
+  if (isLoading) return <LoadingDots />;
 
   if (props.mode === "edit" && !props.animalId) return null;
 
@@ -164,10 +164,6 @@ export function AnimalForm(props: {
     } else {
       toast.error(res.data.detail);
     }
-  }
-
-  async function onImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    event.preventDefault();
   }
 
   return (
@@ -335,49 +331,51 @@ export function AnimalForm(props: {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="tier"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Handling Difficulty Tier</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value as any as string}
-              >
+        <div className="flex items-center gap-12">
+          <FormField
+            control={form.control}
+            name="tier"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Handling Difficulty Tier</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value as any as string}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Tier" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {tiers.map((tier) => (
+                      <SelectItem key={tier.value} value={tier.value}>
+                        {tier.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="handling_enabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Handling Enabled</FormLabel>
                 <FormControl>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Tier" />
-                  </SelectTrigger>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                 </FormControl>
-                <SelectContent>
-                  {tiers.map((tier) => (
-                    <SelectItem key={tier.value} value={tier.value}>
-                      {tier.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="handling_enabled"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Handling Enabled</FormLabel>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="zoo_id"
