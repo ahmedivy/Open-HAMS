@@ -32,3 +32,8 @@ export async function updateEventType(
   const res = await instance.put(`/event-type/${event_id}/`, values);
   return res;
 }
+
+export async function getEventType(id: string) {
+  const res = await instance.get(`/event-type/${id}`);
+  return res.data as EventType;
+}

@@ -5,13 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { DatePickerWithRange } from "../dashboard/data-range-picker";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { TimePicker } from "../ui/time-picker/time-picker-12h";
 
 import { deleteEvent, updateEvent } from "@/api/event";
-import { useEvent, useEventType, useZoos } from "@/api/queries";
+import { useEvent, useEventTypes, useZoos } from "@/api/queries";
 import {
   EventSchema,
   eventSchema,
@@ -86,7 +84,7 @@ export function EditEventForm({
     },
   });
 
-  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventType();
+  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventTypes();
   const { data: zoos, isLoading: isLoadingZoos } = useZoos();
 
   const navigate = useNavigate();

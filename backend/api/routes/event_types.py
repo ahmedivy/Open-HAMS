@@ -40,6 +40,14 @@ async def create_event_type(
     return JSONResponse({"message": "Event type created"}, status_code=200)
 
 
+@router.get("/{event_type_id}")
+async def read_event_type(event_type_id: int, session: SessionDep):
+    event = await session.get(EventType, event_type_id)
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event type not found")
+    return event
+
+
 @router.put("/{event_type_id}")
 async def update_event_type(
     event_type_id: int,

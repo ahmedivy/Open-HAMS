@@ -1,12 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { userManagementColumns } from "../tables/user-management/user-management-cols";
 
+import { useEventTypes } from "@/api/queries";
 import { getUsers } from "@/api/user";
-import { useEventType } from "@/api/queries";
 import { Loading } from "@/routes/loading";
 import { User } from "@/utils/types";
 import { useQuery } from "react-query";
-import { EventTypeModel } from "../models/event-type-model";
+import { EventTypeModel, EventTypeModelWrapper } from "../models/event-type-model";
 import { NewGroupModel } from "../models/new-group";
 import { eventTypesColumns } from "../tables/event-type/event-type-cols";
 import { EventTypeDataTable } from "../tables/event-type/event-type-data-table";
@@ -19,9 +19,7 @@ export function AdminSettings() {
     queryKey: ["users"],
   });
 
-  const { data: eventTypes, isLoading: eventTypesLoading } = useEventType();
-
-  // const { isLoading: rolesLoading } = useRoles();
+  const { data: eventTypes, isLoading: eventTypesLoading } = useEventTypes();
 
   if (isLoading || eventTypesLoading) {
     return <Loading />;
@@ -59,9 +57,9 @@ export function AdminSettings() {
               <h2 className="mb-4 text-2xl font-semibold">
                 Event Type Management
               </h2>
-              <EventTypeModel mode="add">
+              <EventTypeModelWrapper mode="add">
                 <Button>Add Event Type</Button>
-              </EventTypeModel>
+              </EventTypeModelWrapper>
             </div>
             <EventTypeDataTable
               data={eventTypes!}

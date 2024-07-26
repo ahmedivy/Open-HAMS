@@ -1,55 +1,39 @@
-import { Dog } from "lucide-react";
+import { useAnimalFeed } from "@/api/queries";
+import { timeSince } from "@/utils";
+import { AnimalFeed } from "@/utils/types";
+import { LoadingDots } from "../icons";
+import { Avatar, AvatarImage } from "../ui/avatar";
 import { ScrollArea } from "../ui/scroll-area";
 
 export function LiveFeed() {
-  var liveFeed = [
-    {
-      event: "Checked In",
-      name: "Lilly Lizard",
-      by: "John Doe",
-    },
-    {
-      event: "Checked Out",
-      name: "Lilly Lizard",
-      by: "John Doe",
-    },
-  ];
+  const { data: feed, isLoading } = useAnimalFeed();
+
+  if (isLoading) return <LoadingDots />;
 
   return (
-    <ScrollArea className="col-span-2 h-[480px] rounded-lg border bg-white p-4 shadow-sm lg:p-8">
+    <ScrollArea className="col-span-2 h-[480px] rounded-lg bg-white p-4 shadow-sm lg:p-8">
       <h2 className="text-lg font-bold text-foreground">Activity Feed</h2>
       <div className="mb-6 mt-4 space-y-4 lg:max-w-[450px]">
-        <h2 className="text-lg text-foreground">Today</h2>
-        {liveFeed.map((feed, index) => (
-          <ActivityItem key={index} feed={feed} />
-        ))}
-        <h2 className="text-lg text-foreground">Last Week</h2>
-        {liveFeed.map((feed, index) => (
-          <ActivityItem key={index} feed={feed} />
-        ))}
-        <h2 className="text-lg text-foreground">Last Month</h2>
-        {liveFeed.map((feed, index) => (
-          <ActivityItem key={index} feed={feed} />
-        ))}
+        {feed?.map((feed) => <ActivityItem key={feed.name} feed={feed} />)}
       </div>
     </ScrollArea>
   );
 }
 
-function ActivityItem({ feed }: { feed: any }) {
+function ActivityItem({ feed }: { feed: AnimalFeed }) {
   return (
     <div className="flex items-center gap-4 rounded-sm border p-2 px-4">
-      <div className="flex items-center justify-center rounded-full bg-[#E6EEF5] p-4">
-        <Dog className="size-8" />
-      </div>
+      <Avatar className="size-12">
+        <AvatarImage src={feed.image!} alt={feed.name} />
+      </Avatar>
       <div className="flex w-full flex-col justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">{feed.event}:</h3>
-          <p className="">Lilly Lizard</p>
+          <h3 className="text-md font-semibold">{feed.description}:</h3>
+          <p className="text-sm">{feed.name}</p>
         </div>
         <div className="flex w-full items-center justify-between gap-2 text-sm">
-          <p>by John Doe</p>
-          <p className="">7:00 PM</p>
+          <p className="text-xs">by {feed.by}</p>
+          <p className="">{timeSince(feed.logged_at)}</p>
         </div>
       </div>
     </div>

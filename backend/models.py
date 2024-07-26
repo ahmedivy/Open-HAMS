@@ -477,3 +477,11 @@ class RestingAnimal(BaseModel):
     weekly_event_activity_hours: float
     daily_checkout_duration: float
     health_logs: list[AnimalHealthLogWithDetails]
+
+
+class FeedEvent(BaseModel):
+    name: str
+    image: str | None
+    description: str
+    logged_at: datetime
+    by: str

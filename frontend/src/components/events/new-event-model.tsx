@@ -14,7 +14,7 @@ import { TimePicker } from "../ui/time-picker/time-picker-12h";
 import { createEvent } from "@/api/event";
 import {
   useAnimalStatus,
-  useEventType,
+  useEventTypes,
   useHandlers,
   useZoos,
 } from "@/api/queries";
@@ -77,7 +77,7 @@ export function NewEventCard({
   });
   const queryClient = useQueryClient();
 
-  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventType();
+  const { data: eventTypes, isLoading: isLoadingEventTypes } = useEventTypes();
   const { data: zoos, isLoading: isLoadingZoos } = useZoos();
   const { data: handlers, isLoading: isLoadingHandlers } = useHandlers();
   const { data: animals, isLoading: isLoadingAnimals } = useAnimalStatus(

@@ -12,7 +12,7 @@ export function EventsCalendar() {
   const [selected, setSelected] = useState<Date>(new Date());
 
   return (
-    <div className="col-span-3 grid gap-1 rounded-lg border bg-white px-2 py-2 shadow-sm md:grid-cols-2">
+    <div className="col-span-3 grid gap-1 rounded-lg bg-white px-2 py-2 shadow-sm md:grid-cols-2">
       <div className="grid place-content-center gap-2">
         <Tabs defaultValue="month" className="mt-6">
           <TabsList className="mx-auto flex justify-center gap-2 bg-inherit">

@@ -33,3 +33,9 @@ def time_since(delta: timedelta) -> str:
         return f"{delta.seconds // 60}mins"
     else:
         return f"{delta.seconds} seconds"
+
+
+def snake_to_capital_case(s: str) -> str:
+    words = s.split("_")
+    capitalized_words = [word.capitalize() for word in words]
+    return " ".join(capitalized_words)

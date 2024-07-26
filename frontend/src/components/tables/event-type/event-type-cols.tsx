@@ -6,7 +6,8 @@ import {
   update_event_type_group,
   update_event_type_zoo,
 } from "@/api/event-type";
-import { EventTypeModel } from "@/components/models/event-type-model";
+import { useGroups, useZoos } from "@/api/queries";
+import { EventTypeModelWrapper } from "@/components/models/event-type-model";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -15,8 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGroups } from "@/api/queries";
-import { useZoos } from "@/api/queries";
 import { EventType } from "@/utils/types";
 import { useMutation } from "react-query";
 import { toast } from "sonner";
@@ -161,15 +160,15 @@ export const eventTypesColumns: ColumnDef<EventType>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <EventTypeModel
+          <EventTypeModelWrapper
             mode="edit"
-            eventType={row.original}
+            eventTypeId={row.getValue("id")}
             key={row.getValue("id")}
           >
             <Badge variant={"secondary"} className="font-extralight">
               edit
             </Badge>
-          </EventTypeModel>
+          </EventTypeModelWrapper>
         </div>
       );
     },

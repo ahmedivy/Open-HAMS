@@ -12,6 +12,7 @@ import {
   getAnimal,
   getAnimalAuditLog,
   getAnimalDetails,
+  getAnimalFeed,
   getAnimalHealthLog,
   getAnimalsWithStatus,
   getCheckedOutAnimals,
@@ -23,6 +24,7 @@ import { getZoos } from "@/api/zoo";
 import {
   Animal,
   AnimalAuditWithDetails,
+  AnimalFeed,
   AnimalHealthLogWithDetails,
   AnimalWithCurrentEvent,
   AnimalWithEvents,
@@ -35,7 +37,7 @@ import {
   Zoo,
 } from "@/utils/types";
 
-import { getEventTypes } from "@/api/event-type";
+import { getEventType, getEventTypes } from "@/api/event-type";
 import { getRoles } from "@/api/roles";
 import { EventType, Role } from "@/utils/types";
 
@@ -81,7 +83,7 @@ export function useRoles() {
   });
 }
 
-export function useEventType() {
+export function useEventTypes() {
   return useQuery<EventType[]>({
     queryKey: ["eventTypes"],
     queryFn: getEventTypes,
@@ -157,5 +159,19 @@ export function useRestingAnimals() {
   return useQuery<RestingAnimal[]>({
     queryFn: () => getRestingAnimals(),
     queryKey: ["restingAnimals"],
+  });
+}
+
+export function useEventType(id: string) {
+  return useQuery<EventType>({
+    queryFn: () => getEventType(id),
+    queryKey: ["eventType", id],
+  });
+}
+
+export function useAnimalFeed() {
+  return useQuery<AnimalFeed[]>({
+    queryKey: ["animal_feed"],
+    queryFn: getAnimalFeed,
   });
 }

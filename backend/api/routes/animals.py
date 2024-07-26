@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import and_, col, desc, select
 
 from api.deps import CurrentUser, SessionDep
+from core.utils import snake_to_capital_case
 from db.animals import (
     get_all_animals,
     get_animal_by_id,
@@ -33,6 +34,7 @@ from models import (
     EventComment,
     EventCommentWithUser,
     EventWithDetailsAndComments,
+    FeedEvent,
     RestingAnimal,
     UserEvent,
     UserEventWithDetails,
@@ -52,6 +54,38 @@ async def read_all_animals(
 @router.get("/status")
 async def get_animal_status(session: SessionDep, zoo_id: int | None = None):
     return await get_animals_status(session, zoo_id=zoo_id)
+
+
+@router.get("/feed")
+async def get_feed(session: SessionDep) -> list[FeedEvent]:
+    req_actions = [
+        "checked_in",
+        "checked_out",
+        "comment_added",
+        "comment_updated",
+        "health_log_added",
+        "health_log_updated",
+    ]
+
+    feed = await session.exec(
+        select(AnimalAudit)
+        .where(col(AnimalAudit.action).in_(req_actions))
+        .order_by(desc(AnimalAudit.changed_at))
+    )
+    feed = list(feed.unique())
+    feed_list: list[FeedEvent] = []
+
+    for item in feed:
+        event = FeedEvent(
+            name=item.animal.name,
+            description=snake_to_capital_case(item.action),
+            image=item.animal.image,
+            logged_at=item.changed_at,
+            by=f"{item.user.first_name} {item.user.last_name}",
+        )
+        feed_list.append(event)
+
+    return feed_list
 
 
 @router.get("/{animal_id}")

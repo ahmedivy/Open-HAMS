@@ -143,7 +143,7 @@ export function DashboardPage() {
           )}
         </ScrollList>
       </div>
-      <div className="mt-10 grid grid-cols-1 gap-4 2xl:grid-cols-5 2xl:gap-8 h-[480px]">
+      <div className="mt-10 grid grid-cols-1 gap-4 xl:grid-cols-5 2xl:gap-8 h-[480px]">
         <EventsCalendar />
         <LiveFeed />
       </div>

@@ -23,3 +23,5 @@ export type RestingAnimal = schemas["RestingAnimal"];
 
 export type HealthLog = schemas["AnimalHealthLogWithDetails"];
 export type UserWithEvents = schemas["UserWithEvents"];
+
+export type AnimalFeed = schemas["FeedEvent"];

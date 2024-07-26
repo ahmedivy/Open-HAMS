@@ -1,6 +1,7 @@
 import {
   Animal,
   AnimalAuditWithDetails,
+  AnimalFeed,
   AnimalHealthLogWithDetails,
   AnimalWithCurrentEvent,
   AnimalWithEvents,
@@ -107,4 +108,9 @@ export async function getCheckedOutAnimals() {
 export async function getRestingAnimals() {
   const res = await instance.get("/animals/details/resting");
   return res.data as RestingAnimal[];
+}
+
+export async function getAnimalFeed() {
+  const res = await instance.get("/animals/feed");
+  return res.data as AnimalFeed[];
 }
