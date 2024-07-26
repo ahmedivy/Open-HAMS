@@ -12,6 +12,10 @@ from models import Permission, Role, User, Zoo
 
 async def seed_roles_and_permissions() -> None:
     async with AsyncSession(engine) as session:
+        admin_exists = await get_role("admin", session)
+        if admin_exists:
+            return
+
         permissions = {
             "manage_animals": Permission(name="manage_animals"),
             "manage_events": Permission(name="manage_events"),
@@ -103,7 +107,7 @@ async def create_zoo() -> None:
         zoo = Zoo(
             name=settings.ZOO_NAME,
             location=settings.ZOO_LOCATION,
-        ) # type: ignore
+        )  # type: ignore
 
         session.add(zoo)
         await session.commit()
