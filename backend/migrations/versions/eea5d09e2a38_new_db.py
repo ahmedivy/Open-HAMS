@@ -1,8 +1,8 @@
-"""update audit and health logs
+"""new db
 
-Revision ID: 93f42c88e525
+Revision ID: eea5d09e2a38
 Revises: 
-Create Date: 2024-07-16 22:14:50.835107
+Create Date: 2024-07-26 12:26:10.655802
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '93f42c88e525'
+revision: str = 'eea5d09e2a38'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,7 +54,7 @@ def upgrade() -> None:
     sa.Column('tier', sa.Integer(), nullable=False),
     sa.Column('daily_checkout_count', sa.Integer(), nullable=False),
     sa.Column('daily_checkout_duration', sa.Interval(), nullable=False),
-    sa.Column('last_checkin_time', sa.DateTime(), nullable=True),
+    sa.Column('last_checkin_time', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('checked_in', sa.Boolean(), nullable=False),
     sa.Column('handling_enabled', sa.Boolean(), nullable=False),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -109,6 +109,7 @@ def upgrade() -> None:
     sa.Column('last_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('username', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('tier', sa.Integer(), nullable=False),
+    sa.Column('image', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('role_id', sa.Integer(), nullable=False),
@@ -124,12 +125,12 @@ def upgrade() -> None:
     op.create_table('animal_audit',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('animal_id', sa.Integer(), nullable=False),
-    sa.Column('changed_field', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('changed_field', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('old_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('new_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('action', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('changed_at', sa.DateTime(), nullable=False),
+    sa.Column('changed_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('changed_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
     sa.ForeignKeyConstraint(['changed_by'], ['user.id'], ),
@@ -139,7 +140,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('animal_id', sa.Integer(), nullable=False),
     sa.Column('details', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('logged_at', sa.DateTime(), nullable=False),
+    sa.Column('logged_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('logged_by', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['animal_id'], ['animal.id'], ),
     sa.ForeignKeyConstraint(['logged_by'], ['user.id'], ),
@@ -165,8 +166,8 @@ def upgrade() -> None:
     sa.Column('event_id', sa.Integer(), nullable=False),
     sa.Column('user_in_id', sa.Integer(), nullable=True),
     sa.Column('user_out_id', sa.Integer(), nullable=True),
-    sa.Column('checked_in', sa.DateTime(), nullable=True),
-    sa.Column('checked_out', sa.DateTime(), nullable=True),
+    sa.Column('checked_in', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('checked_out', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('duration', sa.Interval(), nullable=True),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=True),
