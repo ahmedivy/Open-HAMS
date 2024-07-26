@@ -8,7 +8,7 @@ import {
   UpdateProfileSchema,
   updateProfileSchema,
 } from "@/api/schemas/auth";
-import { updateUser } from "@/api/user";
+import { updatePassword, updateUser } from "@/api/user";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -47,6 +47,17 @@ export function GeneralSettings() {
     },
   });
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (values: ChangePasswordSchema) => {
+      const res = await updatePassword(values);
+      if (res.status === 200) {
+        toast.success("Password updated successfully");
+      } else {
+        toast.error(res.data.detail);
+      }
+    },
+  });
+
   const updateProfileForm = useForm<UpdateProfileSchema>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
@@ -57,21 +68,25 @@ export function GeneralSettings() {
   });
 
   function updateProfileSubmit(values: UpdateProfileSchema) {
-    console.log(values);
     updateUserMutation.mutate(values);
   }
 
-  const changePasswordForm = useForm({
+  const changePasswordForm = useForm<ChangePasswordSchema>({
     resolver: zodResolver(changePasswordFormSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
     },
   });
 
   function changePasswordSubmit(values: ChangePasswordSchema) {
     console.log(values);
+    if (values.new_password !== values.confirm_password) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    updatePasswordMutation.mutate(values);
   }
 
   return (
@@ -166,7 +181,7 @@ export function GeneralSettings() {
               >
                 <FormField
                   control={changePasswordForm.control}
-                  name="currentPassword"
+                  name="current_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Current Password</FormLabel>
@@ -183,7 +198,7 @@ export function GeneralSettings() {
                 />
                 <FormField
                   control={changePasswordForm.control}
-                  name="newPassword"
+                  name="new_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>New Password</FormLabel>
@@ -200,7 +215,7 @@ export function GeneralSettings() {
                 />
                 <FormField
                   control={changePasswordForm.control}
-                  name="confirmPassword"
+                  name="confirm_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
@@ -215,7 +230,14 @@ export function GeneralSettings() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={updatePasswordMutation.isLoading}
+                >
+                  {updatePasswordMutation.isLoading && (
+                    <Spinner className="mr-2 size-4" />
+                  )}
                   Update Password
                 </Button>
               </form>

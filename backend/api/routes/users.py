@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlmodel import select
 from starlette.exceptions import HTTPException
 
@@ -161,7 +162,7 @@ async def get_user(user_id: int, session: SessionDep, _: CurrentUser) -> UserWit
             upcoming.append(event)
 
     return UserWithEvents(
-        user=user, # type: ignore
+        user=user,  # type: ignore
         current_events=current,
         past_events=past,
         upcoming_events=upcoming,
@@ -266,3 +267,25 @@ async def update_user_group(
 
     await session.commit()
     return JSONResponse({"message": "Group updated"}, status_code=200)
+
+
+class UpdatePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.put("/me/password")
+async def update_password(
+    session: SessionDep,
+    current_user: CurrentUser,
+    password: UpdatePasswordIn = Body(...),
+):
+    if not verify_password(password.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect password",
+        )
+
+    current_user.hashed_password = get_password_hash(password.new_password)
+    await session.commit()
+    return JSONResponse({"message": "Password updated"}, status_code=200)

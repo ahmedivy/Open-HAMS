@@ -26,9 +26,9 @@ export const loginSchema = z.object({
 });
 
 export const changePasswordFormSchema = z.object({
-  currentPassword: z.string().min(8).max(50),
-  newPassword: z.string().min(8).max(50),
-  confirmPassword: z.string().min(8).max(50),
+  current_password: z.string().min(8).max(50),
+  new_password: z.string().min(8).max(50),
+  confirm_password: z.string().min(8).max(50),
 });
 
 export const updateProfileSchema = z.object({

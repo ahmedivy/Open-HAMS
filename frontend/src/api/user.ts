@@ -1,6 +1,6 @@
 import { User, UserWithEvents } from "@/utils/types";
 import instance from "./axios";
-import { UpdateProfileSchema } from "./schemas/auth";
+import { ChangePasswordSchema, UpdateProfileSchema } from "./schemas/auth";
 
 export async function getAuthenticatedUser(): Promise<User> {
   const res = await instance.get("/users/me/");
@@ -16,6 +16,12 @@ export async function getAuthenticatedUser(): Promise<User> {
 
 export async function updateUser(values: UpdateProfileSchema) {
   const res = await instance.put(`/users/me/`, values);
+  return res;
+}
+
+export async function updatePassword(values: ChangePasswordSchema) {
+  const { confirm_password, ...data } = values;
+  const res = await instance.put(`/users/me/password`, data);
   return res;
 }
 
