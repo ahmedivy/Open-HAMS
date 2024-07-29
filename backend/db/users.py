@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlmodel import col, select
 
+from db.permissions import has_permission
 from models import User, UserEvent
 
 
@@ -30,7 +31,7 @@ async def validate_users(user_ids: list[int], session) -> list[User]:
 
 
 async def validate_check_in_out_permissions(current_user: User, event_id: int, session):
-    if current_user.role.name not in ["handler", "admin"]:
+    if not has_permission(current_user.role.permissions, "checkin_animals"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )

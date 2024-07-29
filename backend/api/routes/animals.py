@@ -15,9 +15,10 @@ from db.animals import (
     log_audit,
     log_fields_update,
     retrieve_animal_logs,
+    toggle_animal_availability,
 )
 from db.events import get_events_details
-from db.utils import has_permission
+from db.permissions import has_permission
 from models import (
     Animal,
     AnimalAudit,
@@ -299,7 +300,7 @@ async def get_checked_out_animals(session: SessionDep) -> list[AnimalWithCurrent
 
 @router.post("/")
 async def create_animal(body: AnimalIn, session: SessionDep, current_user: CurrentUser):
-    if not has_permission(current_user.role.permissions, "manage_animals"):
+    if not has_permission(current_user.role.permissions, "add_animal"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -324,7 +325,7 @@ async def create_animal(body: AnimalIn, session: SessionDep, current_user: Curre
 
 @router.delete("/{animal_id}")
 async def delete_animal(animal_id: int, session: SessionDep, current_user: CurrentUser):
-    if not has_permission(current_user.role.permissions, "manage_animals"):
+    if not has_permission(current_user.role.permissions, "delete_animals"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -377,7 +378,7 @@ async def update_animal(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if not has_permission(current_user.role.permissions, "manage_animals"):
+    if not has_permission(current_user.role.permissions, "update_animals"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -401,31 +402,12 @@ async def update_animal(
 async def mark_animal_unavailable(
     animal_id: int, session: SessionDep, current_user: CurrentUser
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "make_animal_unavailable"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
 
-    animal = await get_animal_by_id(animal_id, session)
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
-
-    animal.status = "unavailable"
-    await session.commit()
-    await session.refresh(animal)
-    await session.refresh(current_user)
-
-    await log_audit(
-        session,
-        animal_id=animal.id,
-        changed_by=current_user.id,
-        action="animal_status_changed",
-        description="Admin marked animal as unavailable",
-        changed_field="status",
-        old_value="available",
-        new_value="unavailable",
-    )
-
+    await toggle_animal_availability(session, animal_id, current_user.id, "unavailable")
     return JSONResponse(
         content={"message": "Animal marked unavailable"}, status_code=200
     )
@@ -435,31 +417,12 @@ async def mark_animal_unavailable(
 async def mark_animal_available(
     animal_id: int, session: SessionDep, current_user: CurrentUser
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "make_animal_available"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
 
-    animal = await get_animal_by_id(animal_id, session)
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
-
-    animal.status = "checked_in"
-    await session.commit()
-    await session.refresh(animal)
-    await session.refresh(current_user)
-
-    await log_audit(
-        session,
-        animal_id=animal.id,
-        changed_by=current_user.id,
-        action="animal_status_changed",
-        description="Admin marked animal as available",
-        changed_field="status",
-        old_value="unavailable",
-        new_value="available",
-    )
-
+    await toggle_animal_availability(session, animal_id, current_user.id, "available")
     return JSONResponse(content={"message": "Animal marked available"}, status_code=200)
 
 
@@ -498,6 +461,11 @@ async def create_animal_health_log(
     session: SessionDep,
     current_user: CurrentUser,
 ):
+    if not has_permission(current_user.role.permissions, "add_animal_health_log"):
+        raise HTTPException(
+            status_code=401, detail="Not Authorized to perform this action"
+        )
+
     animal = await get_animal_by_id(animal_id, session)
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
@@ -532,6 +500,11 @@ async def update_animal_health_log(
     session: SessionDep,
     current_user: CurrentUser,
 ):
+    if not has_permission(current_user.role.permissions, "add_animal_health_log"):
+        raise HTTPException(
+            status_code=401, detail="Not Authorized to perform this action"
+        )
+
     animal = await get_animal_by_id(animal_id, session)
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")

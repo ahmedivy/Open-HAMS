@@ -1,17 +1,15 @@
-
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
 
 from api.deps import CurrentUser, SessionDep
+from db.permissions import has_permission
 from models import (
     Group,
     GroupIn,
-    GroupWithMembers,
     GroupWithZoo,
-    User,
 )
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -30,9 +28,9 @@ async def get_groups(
 
 @router.post("/")
 async def create_group(group: GroupIn, session: SessionDep, current_user: CurrentUser):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "create_group"):
         raise HTTPException(
-            status_code=403, detail="You don't have permission to create a group"
+            status_code=403, detail="You do not have permission to create a group"
         )
 
     new_group = Group(title=group.title, zoo_id=group.zoo_id)  # type: ignore

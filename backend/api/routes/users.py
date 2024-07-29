@@ -15,9 +15,9 @@ from core.security import (
     verify_password,
 )
 from db.events import get_events_details
+from db.permissions import has_permission
 from db.roles import get_role
 from db.users import get_user_by_email, get_user_by_id, get_user_by_username
-from db.utils import has_permission
 from db.zoo import get_main_zoo
 from models import Event, User, UserEvent, UserWithDetails, UserWithEvents
 from schemas import RoleIn, TierIn, Token, UserCreate, UserUpdate
@@ -67,21 +67,6 @@ async def get_users(session: SessionDep):
 async def get_handlers(session: SessionDep) -> list[UserWithDetails]:
     handlers = (await session.exec(select(User).where(User.role_id == 2))).unique()
     return list(handlers)  # type: ignore
-
-
-@router.delete("/")
-async def delete_users(session: SessionDep, user: CurrentUser):
-    if user.role.name != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You do not have permission to delete users",
-        )
-
-    users = (await session.exec(select(User))).all()
-    for user in users:
-        await session.delete(user)
-    await session.commit()
-    return {"message": "All users deleted"}
 
 
 @router.post("/")
@@ -171,7 +156,10 @@ async def get_user(user_id: int, session: SessionDep, _: CurrentUser) -> UserWit
 
 @router.delete("/{user_id}")
 async def delete_user(user_id: int, session: SessionDep, current_user: CurrentUser):
-    if current_user.role.name != "admin" and current_user.id != user_id:
+    if (
+        not has_permission(current_user.role.permissions, "delete_users")
+        or current_user.id != user_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized to delete this user",
@@ -193,7 +181,7 @@ async def update_user_role(
     current_user: CurrentUser,
     roleIn: RoleIn = Body(...),
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "update_user_role"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="You do not have permission to update roles",
@@ -222,7 +210,7 @@ async def update_user_tier(
     current_user: CurrentUser,
     tierIn: TierIn = Body(...),
 ):
-    if not has_permission(current_user.role.permissions, "manage_users"):
+    if not has_permission(current_user.role.permissions, "update_user_tier"):
         raise HTTPException(
             status_code=401,
             detail="You do not have permission to update user tiers",
@@ -250,7 +238,7 @@ async def update_user_group(
     user_id: int,
     group_id: int | None = None,
 ):
-    if not has_permission(current_user.role.permissions, "manage_users"):
+    if not has_permission(current_user.role.permissions, "update_user_group"):
         raise HTTPException(
             status_code=403,
             detail="You do not have permission to update user groups",

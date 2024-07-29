@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from sqlmodel import select
 
 from api.deps import CurrentUser, SessionDep
+from db.permissions import has_permission
 from models import Animal, Event, User
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def get_reports(
     from_: date, to: date, entity: str, current_user: CurrentUser, session: SessionDep
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "create_reports"):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
     if entity not in ["events", "animals", "users"]:

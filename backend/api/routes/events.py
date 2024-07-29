@@ -18,7 +18,7 @@ from db.animals import (
 )
 from db.events import get_events_details
 from db.users import validate_check_in_out_permissions, validate_users
-from db.utils import has_permission
+from db.permissions import has_permission
 from models import (
     Animal,
     AnimalEvent,
@@ -116,7 +116,7 @@ async def get_upcoming_live_events(
 async def create_event(
     body: EventCreate, session: SessionDep, current_user: CurrentUser
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not has_permission(current_user.role.permissions, "create_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -226,7 +226,7 @@ async def create_event(
 async def update_event(
     body: EventCreate, session: SessionDep, current_user: CurrentUser, event_id: int
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not has_permission(current_user.role.permissions, "update_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -345,7 +345,7 @@ async def update_event(
 
 @router.delete("/{event_id}")
 async def delete_event(event_id: int, session: SessionDep, current_user: CurrentUser):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not has_permission(current_user.role.permissions, "delete_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -416,7 +416,7 @@ async def reassign_animals_to_event(
     current_user: CurrentUser,
     body: AssignAnimalsIn,
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not has_permission(current_user.role.permissions, "update_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )
@@ -426,7 +426,7 @@ async def reassign_animals_to_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    animals = await validate_animals(body.animal_ids, session)
+    await validate_animals(body.animal_ids, session)
 
     # check if animals are already assigned to an event during this time
     clashing_animals = await session.exec(
@@ -520,7 +520,7 @@ async def reassign_handlers_to_event(
     current_user: CurrentUser,
     body: AssignHandlersIn,
 ):
-    if not has_permission(current_user.role.permissions, "manage_events"):
+    if not has_permission(current_user.role.permissions, "update_events"):
         raise HTTPException(
             status_code=401, detail="You are not authorized to perform this action"
         )

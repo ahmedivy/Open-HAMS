@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from api.deps import CurrentUser, SessionDep
+from db.permissions import has_permission
 from models import EventType, EventTypeIn
 
 router = APIRouter(prefix="/event-type", tags=["Event Types"])
@@ -21,7 +22,7 @@ async def create_event_type(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "create_event_type"):
         raise HTTPException(
             status_code=403, detail="You don't have permission to create an event type"
         )
@@ -55,9 +56,9 @@ async def update_event_type(
     current_user: CurrentUser,
     event_updated: EventTypeIn = Body(...),
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "update_event_type"):
         raise HTTPException(
-            status_code=403, detail="You don't have permission to manage an event type"
+            status_code=403, detail="You don't have permission to update an event type"
         )
 
     event = await session.get(EventType, event_type_id)
@@ -85,7 +86,7 @@ async def update_group(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "update_event_type"):
         raise HTTPException(
             status_code=403, detail="You don't have permission to update an event type"
         )
@@ -107,7 +108,7 @@ async def update_zoo(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    if current_user.role.name != "admin":
+    if not has_permission(current_user.role.permissions, "update_event_type"):
         raise HTTPException(
             status_code=403, detail="You don't have permission to update an event type"
         )

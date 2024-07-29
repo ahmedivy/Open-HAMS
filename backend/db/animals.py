@@ -335,3 +335,26 @@ async def retrieve_animal_logs(animal_id: int, session):
         AnimalHealthLogWithDetails(log=log, animal=log.animal, user=log.user)
         for log in logs
     ]
+
+
+async def toggle_animal_availability(
+    session, animal_id: int, user_id: int, status: Literal["available", "unavailable"]
+):
+    animal = await get_animal_by_id(animal_id, session)
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    animal.status = "checked_in" if status == "available" else "unavailable"
+    await session.commit()
+    await session.refresh(animal)
+
+    await log_audit(
+        session,
+        animal_id=animal.id,
+        changed_by=user_id,
+        action="animal_status_changed",
+        description=f"Admin marked animal as {status}",
+        changed_field="status",
+        old_value="unavailable" if status == "available" else "available",
+        new_value=status,
+    )

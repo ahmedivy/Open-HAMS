@@ -1,11 +1,12 @@
-from core.config import settings
-from models import Zoo
 from sqlmodel import select
 
+from core.config import settings
+from models import Zoo
 
-async def get_zoo(session) -> list[Zoo] | None:
+
+async def get_zoo(session) -> list[Zoo]:
     zoos = await session.exec(select(Zoo))
-    return zoos.all()
+    return list(zoos.all())
 
 
 async def get_zoo_by_id(id: int, session) -> Zoo | None:
