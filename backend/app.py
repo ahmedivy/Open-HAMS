@@ -2,20 +2,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import select
 
 from api import api_router
-from api.deps import SessionDep
-from api.seed import create_admin, create_zoo, seed_db
+from api.seed import seed_db
 from core.config import settings
-from models import Permission, Role, RolePermission, User
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await seed_db()
-    await create_zoo()
-    await create_admin()
     yield
 
 
@@ -30,19 +25,3 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-
-
-# For debugging purposes
-@app.get("/clear")
-async def clear(session: SessionDep):
-    async def truncate_table(model):
-        objs = await session.exec(select(model))
-        for obj in objs:
-            await session.delete(obj)
-        await session.commit()
-
-    models = [User, RolePermission, Permission, Role]
-    for model in models:
-        await truncate_table(model)
-
-    return {"message": "Tables cleared"}

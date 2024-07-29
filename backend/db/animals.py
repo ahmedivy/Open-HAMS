@@ -71,31 +71,43 @@ async def get_animals_status(
         status: str = ""
         status_description: str = ""
 
+        # if animal is checked in
         if animal.status == "checked_in":
-            if daily_event_count >= animal.max_daily_checkouts:
+
+            # if its rest time
+            if animal.last_checkin_time and animal.last_checkin_time + timedelta(
+                hours=animal.rest_time
+            ) > datetime.now(UTC):
+                hours_left = (
+                    animal.last_checkin_time + timedelta(hours=animal.rest_time)
+                ) - datetime.now(UTC)
+
+                status = "unavailable"
+                status_description = f"Resting for {time_since(hours_left)}"
+
+            # if max daily checkouts completed
+            elif daily_event_count >= animal.max_daily_checkouts:
                 status = "unavailable"
                 status_description = "Daily Check-out limit reached"
+
+            # if max daily checkout duration reached
             elif daily_event_duration and daily_event_duration >= timedelta(
                 hours=animal.max_daily_checkout_hours
             ):
                 status = "unavailable"
                 status_description = "Allowed Check-out duration reached"
-            else:
-                if animal.last_checkin_time and animal.last_checkin_time + timedelta(
-                    hours=animal.rest_time
-                ) > datetime.now(UTC):
-                    hours_left = (
-                        animal.last_checkin_time + timedelta(hours=animal.rest_time)
-                    ) - datetime.now(UTC)
 
-                    status = "unavailable"
-                    status_description = f"Resting for {time_since(hours_left)}"
-                else:
-                    status = "available"
-                    status_description = "Animal is available for check-out"
+            # after all these check animal is available for checkout
+            else:
+                status = "available"
+                status_description = "Animal is available for check-out"
+
+        # if animal is already checked out
         elif animal.status == "checked_out":
             status = "checked_out"
             status_description = "Animal is already checked out"
+
+        # special case: if animal is marked unavailable by admin
         elif animal.status == "unavailable":
             status = "unavailable"
             status_description = "By Admin"
