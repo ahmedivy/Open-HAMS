@@ -16,6 +16,13 @@ export function LiveFeed() {
       <div className="mb-6 mt-4 space-y-4 lg:max-w-[450px]">
         {feed?.map((feed) => <ActivityItem key={feed.name} feed={feed} />)}
       </div>
+      {
+        feed?.length === 0 && (
+          <div className="flex items-center justify-center flex-col h-96">
+            <p className="text-sm text-muted-foreground">No activity feed available</p>
+          </div>
+        )
+      }
     </ScrollArea>
   );
 }

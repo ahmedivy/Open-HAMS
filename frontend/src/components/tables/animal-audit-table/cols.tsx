@@ -125,7 +125,7 @@ export const animalAuditTableColumns: ColumnDef<AnimalAuditWithDetails>[] = [
   {
     id: "changed_at",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Changed At" />
+      <DataTableColumnHeader column={column} title="Logged At" />
     ),
     cell: ({ row }) => {
       return <p>{row.getValue("changed_at")}</p>;

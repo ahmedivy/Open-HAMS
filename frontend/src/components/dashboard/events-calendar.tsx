@@ -4,9 +4,9 @@ import { Calendar } from "../ui/calendar";
 
 import { useEventsDetails } from "@/api/queries";
 import { EventCard } from "../events/event-card";
-import { LoadingDots } from "../icons";
 import { ScrollArea } from "../ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { formatDate } from "@/utils";
 
 export function EventsCalendar() {
   const [selected, setSelected] = useState<Date>(new Date());
@@ -57,6 +57,22 @@ export function EventsCalendar() {
               className="mx-auto items-center justify-center"
             />
           </TabsContent>
+          <TabsContent value="day" className="flex flex-col">
+            <Calendar
+              mode="single"
+              selected={selected}
+              onSelect={setSelected as any}
+              className="mx-auto items-center justify-center p-6 px-6"
+            />
+          </TabsContent>
+          <TabsContent value="agenda">
+            <Calendar
+              mode="single"
+              selected={selected}
+              onSelect={setSelected as any}
+              className="mx-auto items-center justify-center"
+            />
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -71,14 +87,18 @@ export function EventsView({ date }: { date: Date }) {
   const { data: eventsDetails, isLoading } = useEventsDetails(date);
 
   if (isLoading) {
-    return <LoadingDots />;
+    return (
+      <div className="flex h-[450px] w-full items-center justify-center flex-col">
+        <p className="text-center text-sm text-foreground">No events found</p>
+      </div>
+    );
   }
 
   console.log(date);
 
   return eventsDetails?.length === 0 ? (
-    <div className="flex h-[450px] w-full items-center justify-center">
-      <p className="text-center text-lg text-foreground">No events found</p>
+    <div className="flex h-[450px] w-full items-center justify-center flex-col">
+      <p className="text-center text-sm text-muted-foreground">No events on {formatDate(date.toString())}</p>
     </div>
   ) : (
     <ScrollArea className="flex h-[450px] w-full flex-col bg-green-300">

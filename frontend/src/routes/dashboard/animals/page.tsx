@@ -3,12 +3,15 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Plus } from "lucide-react";
 
 import { getAnimals } from "@/api/animals";
+import { useUser } from "@/api/queries";
+import { LoadingDots } from "@/components/icons";
 import { AnimalModel } from "@/components/models/animal-model";
 import { Sidebar } from "@/components/sidebar";
 import { animalTableColumns } from "@/components/tables/animals-table/cols";
 import { AnimalTableToolbar } from "@/components/tables/animals-table/toolbar";
 import { DataTable } from "@/components/tables/table-commons/data-table";
 import { Loading } from "@/routes/loading";
+import { hasPermission } from "@/utils";
 import { useQuery } from "react-query";
 
 export function AnimalsPage() {
@@ -16,6 +19,8 @@ export function AnimalsPage() {
     queryKey: ["animals"],
     queryFn: getAnimals,
   });
+
+  const user = useUser();
 
   if (isLoading) return <Loading />;
 
@@ -33,12 +38,15 @@ export function AnimalsPage() {
           </SheetContent>
         </Sheet>
         <div className="ml-auto">
-          <AnimalModel mode="add">
-            <Button>
-              <Plus className="mr-2 size-4" />
-              Add New Animal
-            </Button>
-          </AnimalModel>
+          {hasPermission(user.data!, "add_animal") && (
+            <AnimalModel mode="add">
+              <Button>
+                <Plus className="mr-2 size-4" />
+                Add New Animal
+              </Button>
+            </AnimalModel>
+          )}
+          {user.isLoading && <LoadingDots />}
         </div>
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">

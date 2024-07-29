@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { User } from "./types";
 
 export function cn(...inputs: any[]) {
   return twMerge(clsx(inputs));
@@ -123,4 +124,36 @@ export function timeTill(endingDate: string): string {
   }
 
   return "some seconds";
+}
+
+type PermissionType =
+  | "create_events"
+  | "update_events"
+  | "delete_events"
+  | "view_events"
+  | "add_animal"
+  | "checkout_animals"
+  | "checkin_animals"
+  | "view_animals"
+  | "update_animals"
+  | "delete_animals"
+  | "update_user_tier"
+  | "update_user_role"
+  | "update_user_group"
+  | "add_animal_health_log"
+  | "create_group"
+  | "create_event_type"
+  | "update_event_type"
+  | "delete_event_type"
+  | "update_group"
+  | "create_reports"
+  | "make_animal_unavailable"
+  | "make_animal_available"
+  | "delete_users"
+  | "create_zoo"
+  | "update_zoo"
+  | "delete_zoo";
+
+export function hasPermission(user: User, permission: PermissionType) {
+  return user?.role?.permissions?.some((p) => p.name === permission);
 }

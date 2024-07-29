@@ -149,7 +149,7 @@ export function EventCard({
               {
                 // if selected handlers changed show save button
                 !arraysEqual(selectedHandlers, handlers) ? (
-                  <Button size="xs" className="py-0">
+                  <Button size="xs" className="py-0" onClick={reAssignHandlers}>
                     Save
                   </Button>
                 ) : null
