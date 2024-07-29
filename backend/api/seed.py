@@ -16,11 +16,11 @@ async def seed_db() -> None:
         if admin_exists:
             return
 
-    await create_admin()
-    await create_zoo()
-
     await create_permissions()
     await create_basic_roles()
+
+    await create_admin()
+    await create_zoo()
 
 
 async def create_admin() -> None:
