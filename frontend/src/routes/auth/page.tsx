@@ -121,7 +121,7 @@ export function LoginPage() {
         className="mt-4 w-full"
         variant="secondary"
         onClick={() => {
-          toast.error("Login with Google is not avaiable yet");
+          toast.error("Login with Google is not available yet");
         }}
       >
         Log In with Google
