@@ -86,7 +86,7 @@ async def reset_password(body: ResetPasswordIn, session: SessionDep):
 
     token = secrets.token_urlsafe(32)
 
-    reset_link = f"https://open-hams-three.vercel.app/change-password?token={token}"
+    reset_link = f"https://open-hams-1.onrender.com//change-password?token={token}"
 
     # get current working directory
     cwd = os.getcwd()
