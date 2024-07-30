@@ -60,6 +60,7 @@ export function ChangePasswordPage() {
 
   return (
     <div className="mt-4 w-full max-w-96 space-y-4">
+      <h1 className="text-center text-2xl font-semibold">Change Password</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
