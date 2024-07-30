@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { DatePickerWithRange } from "../dashboard/data-range-picker";
+import { DatePickerWithRange } from "../dashboard/date-range-picker";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";

@@ -59,7 +59,6 @@ export function DatePickerWithRange({
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
-            min={2}
           />
         </PopoverContent>
       </Popover>

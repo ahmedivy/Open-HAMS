@@ -3,7 +3,7 @@ import { DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 import { useState } from "react";
-import { DatePickerWithRange } from "../dashboard/data-range-picker";
+import { DatePickerWithRange } from "../dashboard/date-range-picker";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { TimePicker } from "../ui/time-picker/time-picker-12h";

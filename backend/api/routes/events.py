@@ -17,8 +17,8 @@ from db.animals import (
     validate_tiers,
 )
 from db.events import get_events_details
-from db.users import validate_check_in_out_permissions, validate_users
 from db.permissions import has_permission
+from db.users import validate_check_in_out_permissions, validate_users
 from models import (
     Animal,
     AnimalEvent,
@@ -235,6 +235,17 @@ async def update_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
+    # if event is already started, then it start time can't be changed
+    if event.start_at < datetime.now(UTC):
+        if event.start_at != body.event.start_at:
+            raise HTTPException(
+                status_code=400, detail="Event start time can't be changed"
+            )
+
+    # if event is ended, then it can't be updated
+    if event.end_at < datetime.now(UTC):
+        raise HTTPException(status_code=400, detail="Event is already ended")
+
     # validate event type
     event_type = await session.exec(
         select(EventType.id).where(
@@ -290,6 +301,11 @@ async def update_event(
         animal for animal in existing_animals if animal.animal_id not in body.animal_ids
     ]
     for animal in to_remove_animals:
+        if animal.checked_out:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{animal.animal.name} is already checked out, can't be removed",
+            )
         await session.delete(animal)
 
     # to add users

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "sonner";
-import { DatePickerWithRange } from "../dashboard/data-range-picker";
+import { DatePickerWithRange } from "../dashboard/date-range-picker";
 import { Spinner } from "../icons";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";

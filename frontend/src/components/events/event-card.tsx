@@ -4,14 +4,21 @@ import {
   reAssignAnimalsToEvent,
   reAssignHandlersToEvent,
 } from "@/api/event";
-import { useAnimalStatus } from "@/api/queries";
-import { arraysEqual, cn, formatDate, formatTime } from "@/utils";
+import { useAnimalStatus, useUser } from "@/api/queries";
+import {
+  arraysEqual,
+  cn,
+  formatDate,
+  formatTime,
+  hasPermission,
+} from "@/utils";
 import {
   AnimalEventWithDetails,
   EventWithDetailsAndComments,
 } from "@/utils/types";
 import { CheckCircle, ChevronRight, Minus, XCircle } from "lucide-react";
 import { useState } from "react";
+import { useQueryClient } from "react-query";
 import { toast } from "sonner";
 import { LoadingDots } from "../icons";
 import { Avatar, AvatarImage } from "../ui/avatar";
@@ -40,6 +47,7 @@ export function EventCard({
     data.animals.map(({ animal }) => animal.id.toString()),
   );
   const [open, setOpen] = useState(false);
+  const user = useUser();
 
   const [animalView, setAnimalView] = useState<
     "assign" | "check_in" | "check_out"
@@ -148,6 +156,8 @@ export function EventCard({
               />
               {
                 // if selected handlers changed show save button
+                !user.isLoading &&
+                hasPermission(user.data!, "update_events") &&
                 !arraysEqual(selectedHandlers, handlers) ? (
                   <Button size="xs" className="py-0" onClick={reAssignHandlers}>
                     Save
@@ -165,6 +175,8 @@ export function EventCard({
                   />
                   {
                     // if selected animals changed show save button
+                    !user.isLoading &&
+                    hasPermission(user.data!, "update_events") &&
                     !arraysEqual(selectedAnimals, animals) ? (
                       <Button
                         size="xs"
@@ -175,18 +187,20 @@ export function EventCard({
                         Save
                       </Button>
                     ) : (
-                      <Button
-                        size="xs"
-                        className="leading-0 ml-auto max-w-fit justify-between py-0"
-                        onClick={() =>
-                          setAnimalView(
-                            isEventStarted ? "check_in" : "check_out",
-                          )
-                        }
-                      >
-                        {isEventStarted ? "Check In" : "Check Out"}
-                        <ChevronRight className="ml-2 size-4" />
-                      </Button>
+                      hasPermission(user.data!, "checkin_animals") && (
+                        <Button
+                          size="xs"
+                          className="leading-0 ml-auto max-w-fit justify-between py-0"
+                          onClick={() =>
+                            setAnimalView(
+                              isEventStarted ? "check_in" : "check_out",
+                            )
+                          }
+                        >
+                          {isEventStarted ? "Check In" : "Check Out"}
+                          <ChevronRight className="ml-2 size-4" />
+                        </Button>
+                      )
                     )
                   }
                 </>
@@ -231,8 +245,10 @@ function AnimalCheckInOut(props: {
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const user = useUser();
+  const queryclient = useQueryClient();
   const { data: animalsStatus, isLoading } = useAnimalStatus();
-  if (isLoading) return <LoadingDots className="size-4" />;
+  if (isLoading || user.isLoading) return <LoadingDots className="size-4" />;
 
   async function handleSubmit() {
     setLoading(true);
@@ -246,6 +262,7 @@ function AnimalCheckInOut(props: {
 
     if (res.status === 200) {
       toast.success(res.data.message);
+      queryclient.resetQueries();
     } else {
       toast.error(res.data.detail);
     }
@@ -258,7 +275,7 @@ function AnimalCheckInOut(props: {
         <Label className="text-sm font-light">Animals</Label>
         <div className="flex h-12 flex-wrap items-center gap-2">
           <Minus
-            className="size-5 text-red-500"
+            className="size-5 text-red-500 cursor-pointer"
             onClick={() => props.setView?.("assign")}
           />
           {props.animalsDetails.map((animalDetails) => {
@@ -353,28 +370,29 @@ function AnimalCheckInOut(props: {
           })}
         </div>
       </div>
-      {selected.length > 0 ? (
-        <Button
-          size="xs"
-          className="ml-auto max-w-fit py-0"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading
-            ? "Loading..."
-            : props.mode === "check_in"
-              ? "Check In"
-              : "Check Out"}
-        </Button>
-      ) : (
-        <Button
-          size="xs"
-          className="ml-auto max-w-fit py-0"
-          onClick={() => props.setView?.("assign")}
-        >
-          Cancel
-        </Button>
-      )}
+      {hasPermission(user.data!, "checkin_animals") &&
+        (selected.length > 0 ? (
+          <Button
+            size="xs"
+            className="ml-auto max-w-fit py-0"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? "Loading..."
+              : props.mode === "check_in"
+                ? "Check In"
+                : "Check Out"}
+          </Button>
+        ) : (
+          <Button
+            size="xs"
+            className="ml-auto max-w-fit py-0"
+            onClick={() => props.setView?.("assign")}
+          >
+            Cancel
+          </Button>
+        ))}
     </div>
   );
 }

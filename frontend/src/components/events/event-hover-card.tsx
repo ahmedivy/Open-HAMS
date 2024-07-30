@@ -164,7 +164,7 @@ function AnimalCheckInOut(props: {
         <Label className="text-sm font-light">Animals</Label>
         <div className="flex h-12 flex-wrap items-center gap-2">
           <Minus
-            className="size-5 text-red-500"
+            className="size-5 cursor-pointer text-red-500"
             onClick={() => props.setView?.("assign")}
           />
           {props.animalsDetails.map((animalDetails) => {

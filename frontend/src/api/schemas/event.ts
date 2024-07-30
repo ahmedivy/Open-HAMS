@@ -9,17 +9,23 @@ export const eventSchema = z.object({
     .string({ message: "Please enter a description" })
     .min(10, "Description must be at least 10 characters"),
   date: z
-    .object({
-      from: z.date({ message: "Please select a starting date" }),
-      to: z.date({ message: "Please select a ending date" }),
-    })
-    .refine((data) => data.from < data.to, {
+    .object(
+      {
+        from: z.date(),
+        to: z.date().optional(),
+      },
+      { required_error: "Please select a date range" },
+    )
+    .refine((date) => {
+      return !!date.to;
+    }, "End Date is required.")
+    .refine((data) => data.from <= data.to!, {
       message: "Ending date must be after starting date",
     })
     .refine((data) => data.from > addDays(new Date(), -1), {
       message: "Starting date must be in the future",
     })
-    .refine((data) => data.to > addDays(new Date(), -1), {
+    .refine((data) => data.to! > addDays(new Date(), -1), {
       message: "Ending date must be in the future",
     }),
   startTime: z.date({ message: "Please select a time" }),
@@ -41,9 +47,9 @@ export function transformEventSchema(data: EventSchema) {
 
   // Combine date.to and endTime into end_at
   const end_at = new Date(
-    data.date.to.getFullYear(),
-    data.date.to.getMonth(),
-    data.date.to.getDate(),
+    data.date.to!.getFullYear(),
+    data.date.to!.getMonth(),
+    data.date.to!.getDate(),
     data.endTime.getHours(),
     data.endTime.getMinutes(),
     data.endTime.getSeconds(),

@@ -2,16 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
-import { useEvents } from "@/api/queries";
+import { useEvents, useUser } from "@/api/queries";
 import { NewEventModel } from "@/components/events/new-event-model";
+import { LoadingDots } from "@/components/icons";
 import { Sidebar } from "@/components/sidebar";
 import { eventTableColumns } from "@/components/tables/events-table/col";
 import { EventTableToolbar } from "@/components/tables/events-table/toolbar";
 import { DataTable } from "@/components/tables/table-commons/data-table";
 import { Loading } from "@/routes/loading";
+import { hasPermission } from "@/utils";
 
 export function EventsPage() {
   const { data: events, isLoading } = useEvents();
+  const user = useUser();
 
   if (isLoading) return <Loading />;
 
@@ -28,7 +31,8 @@ export function EventsPage() {
             <Sidebar />
           </SheetContent>
         </Sheet>
-        <NewEventModel />
+        {user.isLoading && <LoadingDots className="ml-auto" />}
+        {hasPermission(user.data!, "create_events") && <NewEventModel />}
       </header>
       <div className="mt-10 w-full rounded-lg border bg-white p-8 shadow-sm">
         <h2 className="mb-4 text-2xl font-semibold">All Events</h2>

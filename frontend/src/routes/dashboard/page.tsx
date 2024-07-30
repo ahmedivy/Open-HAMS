@@ -16,7 +16,6 @@ import { LiveFeed } from "@/components/dashboard/live-feed";
 import { EventHoverCard } from "@/components/events/event-hover-card";
 import { HealthLogBox } from "@/components/events/health-log-box";
 import { NewEventModel } from "@/components/events/new-event-model";
-import { LoadingDots } from "@/components/icons";
 import { Sidebar } from "@/components/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -55,7 +54,7 @@ export function NewEventModelButton() {
   const { data: user, isLoading } = useUser();
 
   if (isLoading) {
-    return <LoadingDots />;
+    return null;
   }
 
   if (!hasPermission(user!, "create_events")) {

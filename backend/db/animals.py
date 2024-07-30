@@ -293,6 +293,7 @@ async def validate_event_clashes(
                 Event.end_at >= start_at,
                 Event.zoo_id == zoo_id,
                 col(Animal.id).in_(animal_ids),
+                col(AnimalEvent.checked_in).is_(None),
                 Event.id != event_id if event_id else True,
             )
         )

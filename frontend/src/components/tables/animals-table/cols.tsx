@@ -1,5 +1,7 @@
+import { useUser } from "@/api/queries";
 import { AnimalModel } from "@/components/models/animal-model";
 import { Button } from "@/components/ui/button";
+import { hasPermission } from "@/utils";
 import { Animal } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -121,19 +123,28 @@ export const animalTableColumns: ColumnDef<Animal>[] = [
   },
   {
     id: "actions",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Actions" />
-    ),
-    cell: ({ row }) => (
-      <AnimalModel mode="edit" animalId={row.getValue("id")}>
-        <Button
-          variant="secondary"
-          className="rounded-full font-light"
-          size="xs"
-        >
-          edit
-        </Button>
-      </AnimalModel>
-    ),
+    cell: ({ row }) => {
+      const user = useUser();
+
+      if (user.isLoading) {
+        return null;
+      }
+
+      if (!hasPermission(user?.data!, "update_animals")) {
+        return null;
+      }
+
+      return (
+        <AnimalModel mode="edit" animalId={row.getValue("id")}>
+          <Button
+            variant="secondary"
+            className="rounded-full font-light"
+            size="xs"
+          >
+            edit
+          </Button>
+        </AnimalModel>
+      );
+    },
   },
 ];

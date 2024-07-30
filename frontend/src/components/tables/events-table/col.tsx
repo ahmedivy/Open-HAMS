@@ -1,10 +1,12 @@
 import { EventWithCount } from "@/api/event";
+import { useUser } from "@/api/queries";
 import { EditEventFormWrapper } from "@/components/events/edit-event-model";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { hasPermission } from "@/utils";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "../table-commons/col-headers";
 import { useState } from "react";
+import { DataTableColumnHeader } from "../table-commons/col-headers";
 
 export const eventTableColumns: ColumnDef<EventWithCount>[] = [
   {
@@ -141,6 +143,15 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
     id: "actions",
     cell: ({ row }) => {
       const [open, setOpen] = useState(false);
+      const user = useUser();
+
+      if (user.isLoading) {
+        return null;
+      }
+
+      if (!hasPermission(user?.data!, "update_events")) {
+        return null;
+      }
 
       return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -150,7 +161,10 @@ export const eventTableColumns: ColumnDef<EventWithCount>[] = [
             </Badge>
           </DialogTrigger>
           <DialogContent className="max-w-fit">
-            <EditEventFormWrapper eventId={row.getValue("id")} setOpen={setOpen} />
+            <EditEventFormWrapper
+              eventId={row.getValue("id")}
+              setOpen={setOpen}
+            />
           </DialogContent>
         </Dialog>
       );
