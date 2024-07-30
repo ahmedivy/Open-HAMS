@@ -47,6 +47,19 @@ class Permission(SQLModel, table=True):
     )
 
 
+class PasswordResetToken(SQLModel, table=True):
+    __tablename__ = "password_reset_token"  # type: ignore
+
+    id: int = Field(primary_key=True)
+    token: str
+    user_id: int = Field(foreign_key="user.id")
+    expires_at: datetime = Field(
+        sa_column=sa.Column(
+            type_=TIMESTAMP(timezone=True),
+        )
+    )
+
+
 class Zoo(SQLModel, table=True):
     id: int = Field(primary_key=True)
     name: str = Field(max_length=255)

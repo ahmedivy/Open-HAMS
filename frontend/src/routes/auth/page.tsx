@@ -109,7 +109,7 @@ export function LoginPage() {
               )}
               Log In
             </Button>
-            <Link className="self-start text-sm" to="#">
+            <Link className="self-start text-sm" to="/reset-password">
               Forgot Password?
             </Link>
           </div>

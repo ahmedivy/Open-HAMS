@@ -27,5 +27,8 @@ class Config(BaseSettings):
     AWS_REGION: str
     AWS_BUCKET_NAME: str
 
+    # RESEND API KEY
+    RESEND_API_KEY: str
+
 
 settings = Config()  # type: ignore

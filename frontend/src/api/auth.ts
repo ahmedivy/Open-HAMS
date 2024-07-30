@@ -41,3 +41,14 @@ export async function login(values: LoginSchema) {
 export function logout() {
   localStorage.removeItem("token");
 }
+
+export function resetPassword(values: { email: string }) {
+  return instance.post("/users/reset-password", values);
+}
+
+export function changePassword(newPassword: string, token: string) {
+  return instance.post("/users/change-password", {
+    password: newPassword,
+    token,
+  });
+}

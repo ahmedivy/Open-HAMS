@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -12,20 +13,25 @@ import {
 import * as React from "react";
 
 interface PasswordResetProps {
-  resetCode?: string;
+  resetLink?: string;
 }
 
-export const PasswordResetEmail = ({ resetCode }: PasswordResetProps) => (
+export const PasswordResetEmail = ({
+  resetLink: resetCode,
+}: PasswordResetProps) => (
   <Html>
     <Head />
-    <Preview>Password Reset Code</Preview>
+    <Preview>Password Change Request</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset Passord Code</Heading>
+        <Heading style={h1}>Password Change Request</Heading>
         <Text style={{ ...text, marginBottom: "14px" }}>
-          Use the following code to reset your password.
+          Someone recently requested a password change for your OpenHAMS
+          account. If this was you, you can set a new password here:
         </Text>
-        <code style={code}>{resetCode}</code>
+        <Button style={button} href={resetCode}>
+          Reset password
+        </Button>
         <Text
           style={{
             ...text,
@@ -59,7 +65,7 @@ export const PasswordResetEmail = ({ resetCode }: PasswordResetProps) => (
 );
 
 PasswordResetEmail.PreviewProps = {
-  resetCode: "{resetCode}",
+  resetLink: "{resetLink}",
 } as PasswordResetProps;
 
 export default PasswordResetEmail;
@@ -82,6 +88,19 @@ const h1 = {
   fontWeight: "bold",
   margin: "40px 0",
   padding: "0",
+};
+
+const button = {
+  backgroundColor: "#98FC98",
+  borderRadius: "4px",
+  color: "#000",
+  fontFamily: "'Open Sans', 'Helvetica Neue', Arial",
+  fontSize: "15px",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "block",
+  width: "210px",
+  padding: "14px 7px",
 };
 
 const link = {

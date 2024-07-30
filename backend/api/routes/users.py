@@ -1,6 +1,9 @@
+import os
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import resend
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -9,6 +12,7 @@ from sqlmodel import select
 from starlette.exceptions import HTTPException
 
 from api.deps import CurrentUser, SessionDep
+from core.config import settings
 from core.security import (
     create_access_token,
     get_password_hash,
@@ -19,12 +23,22 @@ from db.permissions import has_permission
 from db.roles import get_role
 from db.users import get_user_by_email, get_user_by_id, get_user_by_username
 from db.zoo import get_main_zoo
-from models import Event, User, UserEvent, UserWithDetails, UserWithEvents
+from models import (
+    Event,
+    PasswordResetToken,
+    User,
+    UserEvent,
+    UserWithDetails,
+    UserWithEvents,
+)
 from schemas import RoleIn, TierIn, Token, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+
+
+resend.api_key = settings.RESEND_API_KEY
 
 
 @router.post("/login")
@@ -55,6 +69,98 @@ async def login(
     )
 
     return Token(access_token=access_token, token_type="bearer")
+
+
+class ResetPasswordIn(BaseModel):
+    email: str
+
+
+@router.post("/reset-password")
+async def reset_password(body: ResetPasswordIn, session: SessionDep):
+    user = (await session.exec(select(User).where(User.email == body.email))).first()
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    token = secrets.token_urlsafe(32)
+
+    reset_link = f"http://localhost:3000/change-password?token={token}"
+
+    # get current working directory
+    cwd = os.getcwd()
+    template = os.path.join(cwd, "templates", "emails", "reset-password.html")
+
+    with open(template, "r") as file:
+        html = file.read()
+
+    params: resend.Emails.SendParams = {
+        "from": "OpenHAMS <hams@ahmed-abdullah.live>",
+        "to": [user.email],
+        "subject": "Password Change Request",
+        "html": html.format(resetLink=reset_link),
+    }
+
+    try:
+        email = resend.Emails.send(params)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Error sending email",
+        )
+
+    reset_token = PasswordResetToken(
+        token=token,
+        user_id=user.id,
+        expires_at=datetime.now(UTC) + timedelta(hours=2),
+    )  # type: ignore
+
+    session.add(reset_token)
+    await session.commit()
+
+    return JSONResponse(
+        {"message": "We have send an email with change password link"}, status_code=200
+    )
+
+
+class ChangePasswordIn(BaseModel):
+    token: str
+    password: str
+
+
+@router.post("/change-password")
+async def change_password(body: ChangePasswordIn, session: SessionDep):
+    reset_token = (
+        await session.exec(
+            select(PasswordResetToken).where(PasswordResetToken.token == body.token)
+        )
+    ).first()
+
+    if not reset_token:
+        raise HTTPException(
+            status_code=404,
+            detail="Token not found",
+        )
+
+    if reset_token.expires_at < datetime.now(UTC):
+        raise HTTPException(
+            status_code=400,
+            detail="Token expired",
+        )
+
+    user = await get_user_by_id(reset_token.user_id, session)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    user.hashed_password = get_password_hash(body.password)
+    await session.delete(reset_token)
+    await session.commit()
+
+    return JSONResponse({"message": "Password changed successfully"}, status_code=200)
 
 
 @router.get("/", response_model=list[UserWithDetails])

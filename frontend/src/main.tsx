@@ -3,8 +3,10 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import "./index.css";
+import { ChangePasswordPage } from "./routes/auth/change-password/page";
 import { AuthLayout } from "./routes/auth/layout";
 import { LoginPage } from "./routes/auth/page";
+import { ResetPasswordPage } from "./routes/auth/reset/page";
 import { SignUpPage } from "./routes/auth/signup/page";
 import { AnimalDetailsPage } from "./routes/dashboard/animals/[id]/page";
 import { AnimalsPage } from "./routes/dashboard/animals/page";
@@ -27,6 +29,8 @@ const router = createBrowserRouter([
         children: [
           { path: "/", element: <LoginPage /> },
           { path: "/signup", element: <SignUpPage /> },
+          { path: "/reset-password", element: <ResetPasswordPage /> },
+          { path: "/change-password", element: <ChangePasswordPage /> },
         ],
       },
       {
