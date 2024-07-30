@@ -12,10 +12,10 @@ import {
 import * as React from "react";
 
 interface PasswordResetProps {
-  loginCode?: string;
+  resetCode?: string;
 }
 
-export const PasswordResetEmail = ({ loginCode }: PasswordResetProps) => (
+export const PasswordResetEmail = ({ resetCode }: PasswordResetProps) => (
   <Html>
     <Head />
     <Preview>Password Reset Code</Preview>
@@ -25,7 +25,7 @@ export const PasswordResetEmail = ({ loginCode }: PasswordResetProps) => (
         <Text style={{ ...text, marginBottom: "14px" }}>
           Use the following code to reset your password.
         </Text>
-        <code style={code}>{loginCode}</code>
+        <code style={code}>{resetCode}</code>
         <Text
           style={{
             ...text,
@@ -59,7 +59,7 @@ export const PasswordResetEmail = ({ loginCode }: PasswordResetProps) => (
 );
 
 PasswordResetEmail.PreviewProps = {
-  loginCode: "{loginCode}",
+  resetCode: "{resetCode}",
 } as PasswordResetProps;
 
 export default PasswordResetEmail;
