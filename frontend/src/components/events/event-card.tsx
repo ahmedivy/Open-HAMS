@@ -48,6 +48,7 @@ export function EventCard({
   );
   const [open, setOpen] = useState(false);
   const user = useUser();
+  const queryClient = useQueryClient();
 
   const [animalView, setAnimalView] = useState<
     "assign" | "check_in" | "check_out"
@@ -68,6 +69,7 @@ export function EventCard({
 
     if (res.status === 200) {
       toast.success(res.data.message);
+      queryClient.resetQueries();
     } else {
       toast.error(res.data.detail);
     }
@@ -85,6 +87,7 @@ export function EventCard({
 
     if (res.status === 200) {
       toast.success(res.data.message);
+      queryClient.resetQueries();
     } else {
       toast.error(res.data.detail);
     }
@@ -275,7 +278,7 @@ function AnimalCheckInOut(props: {
         <Label className="text-sm font-light">Animals</Label>
         <div className="flex h-12 flex-wrap items-center gap-2">
           <Minus
-            className="size-5 text-red-500 cursor-pointer"
+            className="size-5 cursor-pointer text-red-500"
             onClick={() => props.setView?.("assign")}
           />
           {props.animalsDetails.map((animalDetails) => {

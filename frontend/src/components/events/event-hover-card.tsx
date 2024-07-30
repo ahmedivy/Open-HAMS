@@ -11,6 +11,7 @@ import {
 } from "@/utils/types";
 import { CheckCircle, ChevronRight, Minus, XCircle } from "lucide-react";
 import { useState } from "react";
+import { useQueryClient } from "react-query";
 import { toast } from "sonner";
 import { LoadingDots } from "../icons";
 import { Avatar, AvatarImage } from "../ui/avatar";
@@ -138,6 +139,7 @@ function AnimalCheckInOut(props: {
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { data: animalsStatus, isLoading } = useAnimalStatus();
+  const queryClient = useQueryClient();
   if (isLoading) return <LoadingDots className="size-4" />;
 
   async function handleSubmit() {
@@ -152,6 +154,7 @@ function AnimalCheckInOut(props: {
 
     if (res.status === 200) {
       toast.success(res.data.message);
+      queryClient.resetQueries();
     } else {
       toast.error(res.data.detail);
     }
