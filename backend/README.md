@@ -3,8 +3,12 @@
 ## Technologies Used
 
 - Python
-- FastAPI
-- SQLModel / SQLAlchemy
+- FastAPI (API Framework)
+- Postgres with (SQLModel / SQL Alchemy ORM)
+- Alembic (for migrations)
+- Pydantic (for Data Validation)
+- AWS S3 (for storage)
+- Resend (for emails)
 
 ## Instructions
 
@@ -51,24 +55,27 @@ Thank you for your interest in contributing to our project! We welcome contribut
 
 ### Prerequisites
 
-- Python 3.7+
+- Python 3.9+
 - Familiarity with Git
 
 ### Setting Up Your Development Environment
 
 1. Fork the repository and clone your fork.
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
+
 3. Set up local development server:
+
    ```bash
    uvicorn app.main:app --reload
    ```
 
 ### Coding Standards
 
-Please follow the coding style and conventions established in the project. Use Black for Python.
+Please follow the coding style and conventions established in the project. Use Ruff for Linting.
 
 ### Submitting Changes
 
@@ -87,5 +94,4 @@ All submissions require review. We aim to review and respond to your pull reques
 
 ### Community and Communication
 
-Join our community on [Discord](#) for discussions and support.
-
+Join our community on [Discord](https://discord.gg/CVxRvMzqWQ) for discussions and support.
