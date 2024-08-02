@@ -1,4 +1,4 @@
-# Backend for HAMS
+# Frontend for HAMS
 
 ## Technologies Used
 
