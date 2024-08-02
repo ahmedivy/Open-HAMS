@@ -7,6 +7,12 @@ import { capitalize, cn, getInitials } from "@/utils";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 
+import { Sidebar } from "@/components/sidebar";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+import { Menu } from "lucide-react";
+
 export function UserDetailsPage() {
   const { id } = useParams();
 
@@ -21,9 +27,21 @@ export function UserDetailsPage() {
 
   return (
     <main>
-      <section className="flex w-full gap-4 px-12 pb-4 pt-8 lg:gap-8">
-        <div className="flex h-full w-1/3 flex-col justify-between gap-4 rounded-md bg-white p-6 shadow-sm">
-          <Avatar className="mx-auto size-28">
+      <header className="flex items-center justify-between lg:px-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="lg:hidden">
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="m-0 w-56 p-0">
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
+      </header>
+      <section className="flex w-full flex-col gap-4 pb-4 pt-8 lg:flex-row lg:gap-8 lg:px-12">
+        <div className="flex h-full w-full flex-col justify-between gap-4 rounded-md bg-white p-6 shadow-sm lg:w-1/3">
+          <Avatar className="mx-auto size-16 lg:size-28">
             <AvatarImage src={user?.user.image!} />
             <AvatarFallback className="text-3xl">
               {getInitials(user?.user.first_name!, user?.user.last_name)}
@@ -58,8 +76,8 @@ export function UserDetailsPage() {
             </div>
           </div>
         </div>
-        <div className="flex w-2/3 flex-col">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex w-full flex-col lg:w-2/3">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeading>User Role</CardHeading>
               <CardDetails className="text-2xl">

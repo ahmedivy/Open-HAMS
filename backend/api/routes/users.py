@@ -171,7 +171,12 @@ async def get_users(session: SessionDep):
 
 @router.get("/handlers")
 async def get_handlers(session: SessionDep) -> list[UserWithDetails]:
-    handlers = (await session.exec(select(User).where(User.role_id == 2))).unique()
+    handler = await get_role("handler", session)
+    if not handler:
+        raise HTTPException(status_code=404, detail="Role not found")
+    handlers = (
+        await session.exec(select(User).where(User.role_id == handler.id))
+    ).unique()
     return list(handlers)  # type: ignore
 
 

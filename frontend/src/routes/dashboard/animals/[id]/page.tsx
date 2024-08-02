@@ -7,16 +7,20 @@ import {
 } from "@/api/queries";
 import { EventsList } from "@/components/events/events-list";
 import { NewHealthLogModel } from "@/components/models/health-log-model";
+import { Sidebar } from "@/components/sidebar";
 import { animalAuditTableColumns } from "@/components/tables/animal-audit-table/cols";
 import { animalHealthLogTableColumns } from "@/components/tables/animal-health-table/cols";
 import { DataTable } from "@/components/tables/table-commons/data-table";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardDetails, CardHeading } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/routes/loading";
 import { cn, formatDate } from "@/utils";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
@@ -34,9 +38,21 @@ export function AnimalDetailsPage() {
 
   return (
     <main>
-      <section className="flex h-full w-full gap-4 px-12 pb-4 pt-8 lg:gap-8">
-        <div className="flex min-h-full w-1/3 flex-col gap-4 rounded-md bg-white p-6 pt-16 shadow-sm">
-          <Avatar className="mx-auto size-32">
+      <header className="flex items-center justify-between lg:px-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="lg:hidden">
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="m-0 w-56 p-0">
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
+      </header>
+      <section className="flex h-full w-full flex-col gap-4 pb-4  pt-8 lg:flex-row lg:gap-8 lg:px-12">
+        <div className="flex min-h-full w-full flex-col gap-4 rounded-md bg-white p-6 pt-16 shadow-sm lg:w-1/3">
+          <Avatar className="mx-auto size-16 lg:size-32">
             <AvatarImage src={data.animal.image!} />
           </Avatar>
           <h1 className="text-center text-2xl text-black">
@@ -76,8 +92,8 @@ export function AnimalDetailsPage() {
             </div>
           </div>
         </div>
-        <div className="flex w-2/3 flex-col">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex w-full flex-col lg:w-2/3">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Card className="gap-2">
               <div className="flex w-full items-center justify-between gap-0">
                 <CardHeading>Event Status</CardHeading>
@@ -173,7 +189,7 @@ export function AnimalDetailsPage() {
           </div>
         </div>
       </section>
-      <section className="px-12 py-2">
+      <section className="py-2 lg:px-12">
         <Tabs defaultValue="audit-log" className="mt-6">
           <TabsList className="bg-inherit">
             <TabsTrigger

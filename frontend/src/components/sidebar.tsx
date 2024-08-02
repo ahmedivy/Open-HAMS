@@ -62,7 +62,7 @@ export function Sidebar() {
         <img src="/logo.png" alt="logo" className="size-7" />
         <h1 className="text-[20px] font-bold tracking-tight">Open HAMS</h1>
       </Link>
-      <Search placeholder="Search..." className="mt-16" name="q" />
+      <Search placeholder="Search..." className="mt-16" name="q" autoFocus={false} />
       <nav className="mt-4 space-y-1">
         {routes.map((route) => (
           <SidebarItem key={route.path} {...route} />

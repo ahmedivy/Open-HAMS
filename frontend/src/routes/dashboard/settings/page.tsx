@@ -25,7 +25,7 @@ export function SettingsPage() {
           setSearchParams({ tab: value });
         }}
       >
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center flex-col lg:flex-row gap-4 justify-start lg:justify-between">
           <TabsList className="bg-[#E6EEF5]">
             <TabsTrigger
               value="general"
