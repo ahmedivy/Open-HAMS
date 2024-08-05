@@ -186,11 +186,11 @@ async def create_user(session: SessionDep, user: UserCreate):
     # check if username or email already exists
     user_exists = await get_user_by_username(user.username, session)
     if user_exists:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=409, detail="Username already exists")
 
     user_exists = await get_user_by_email(user.email, session)
     if user_exists:
-        raise HTTPException(status_code=400, detail="Try another email address")
+        raise HTTPException(status_code=409, detail="Try another email address")
 
     # get basic role
     role = await get_role("visitor", session)
