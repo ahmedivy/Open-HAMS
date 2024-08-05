@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette.exceptions import HTTPException
 
 from api.deps import CurrentUser, SessionDep
@@ -26,6 +26,7 @@ from db.zoo import get_main_zoo
 from models import (
     Event,
     PasswordResetToken,
+    Role,
     User,
     UserEvent,
     UserWithDetails,
@@ -171,11 +172,11 @@ async def get_users(session: SessionDep):
 
 @router.get("/handlers")
 async def get_handlers(session: SessionDep) -> list[UserWithDetails]:
-    handler = await get_role("handler", session)
-    if not handler:
-        raise HTTPException(status_code=404, detail="Role not found")
+    allowed_to_handle = ["admin", "moderator", "handler"]
     handlers = (
-        await session.exec(select(User).where(User.role_id == handler.id))
+        await session.exec(
+            select(User).join(Role).where(col(Role.name).in_(allowed_to_handle))
+        )
     ).unique()
     return list(handlers)  # type: ignore
 
@@ -185,11 +186,11 @@ async def create_user(session: SessionDep, user: UserCreate):
     # check if username or email already exists
     user_exists = await get_user_by_username(user.username, session)
     if user_exists:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=409, detail="Username already exists")
 
     user_exists = await get_user_by_email(user.email, session)
     if user_exists:
-        raise HTTPException(status_code=400, detail="Try another email address")
+        raise HTTPException(status_code=409, detail="Try another email address")
 
     # get basic role
     role = await get_role("visitor", session)
