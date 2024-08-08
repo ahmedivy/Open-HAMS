@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -38,45 +38,46 @@ router = APIRouter(prefix="/events", tags=["Events"])
 
 
 @router.get("/")
-async def read_all_events(session: SessionDep):
-    query = (
-        select(
-            Event,
-            EventType,
-            func.count(col(AnimalEvent.animal_id)).label("animal_count"),
+async def read_all_events(session: SessionDep, details: bool = True):
+    if details:
+        query = (
+            select(
+                Event,
+                EventType,
+                func.count(col(AnimalEvent.animal_id)).label("animal_count"),
+            )
+            .join(AnimalEvent, isouter=True)
+            .join(EventType)
+            .group_by(col(Event.id), col(EventType.id))
         )
-        .join(AnimalEvent, isouter=True)
-        .join(EventType)
-        .group_by(col(Event.id), col(EventType.id))
-    )
+        events = (await session.exec(query)).all()
+        return [
+            {"event": event, "animal_count": animal_count, "event_type": event_type}
+            for event, event_type, animal_count in events
+        ]
+
+    query = select(Event)
     events = (await session.exec(query)).all()
-    return [
-        {"event": event, "animal_count": animal_count, "event_type": event_type}
-        for event, event_type, animal_count in events
-    ]
+    return events
 
 
 @router.get("/details")
 async def get_events_details_by_date(
     session: SessionDep,
-    _date: date = Query(
-        ..., description="Date to filter events", default_factory=lambda: date.today()
-    ),
-) -> list[EventWithDetailsAndComments]:
+    id: int = Query(..., description="Event ID to filter events"),
+) -> EventWithDetailsAndComments:
     query = (
         select(
             Event,
         )
-        .where(
-            and_(func.date(Event.start_at) <= _date, func.date(Event.end_at) >= _date)
-        )
+        .where(Event.id == id)
         .options(
             joinedload(Event.event_type),  # type: ignore
             joinedload(Event.zoo),  # type: ignore
         )
     )
     events = list((await session.exec(query)).all())
-    return await get_events_details(session, events)
+    return (await get_events_details(session, events))[0]
 
 
 class GetUpcomingLiveEvents(BaseModel):

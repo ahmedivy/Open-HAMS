@@ -123,3 +123,19 @@
     r: 0.2px;
   }
 }
+
+.fc-toolbar-title {
+  @apply py-4 text-lg font-semibold !important;
+}
+
+.fc-button {
+  @apply flex size-8 items-center rounded-lg border-0 bg-primary p-1 !important;
+}
+
+.fc-icon {
+  @apply text-foreground !important;
+}
+
+.fc-scrollgrid {
+  @apply border-border !important;
+}

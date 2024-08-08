@@ -14,21 +14,23 @@ export type EventWithCount = {
   animal_count: number;
 };
 
-export async function getEvents() {
-  const res = await instance.get("/events");
+export async function getEventsWithDetails() {
+  const res = await instance.get("/events?details=true");
   return res.data as EventWithCount[];
 }
 
-export async function getEventsDetails(date: Date) {
+export async function getEvents() {
+  const res = await instance.get("/events?details=false");
+  return res.data as Event[];
+}
+
+export async function getEventsDetails(id: string) {
   const res = await instance.get(`/events/details`, {
     params: {
-      _date: date.toISOString().split("T")[0],
+      id,
     },
   });
-
-  console.log("Date", date);
-
-  return res.data as EventWithDetailsAndComments[];
+  return res.data as EventWithDetailsAndComments;
 }
 
 export type CreateEventSchema = {

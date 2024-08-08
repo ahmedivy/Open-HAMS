@@ -26,9 +26,11 @@ import { HandlerSelect } from "./handlers-select";
 export function EventCard({
   data,
   compact = false,
+  className,
 }: {
   data: EventWithDetailsAndComments;
   compact?: boolean;
+  className?: string;
 }) {
   const [selectedHandlers, setSelectedHandlers] = useState<string[]>(
     data.users.map(({ user }) => user.id.toString()),
@@ -87,7 +89,7 @@ export function EventCard({
   const isEventStarted = new Date(data.event.start_at) < new Date();
 
   return (
-    <Card className="w-full rounded-none border-b p-4 shadow-lg">
+    <Card className={cn("w-full rounded-none border-b p-4 shadow-lg", className)}>
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">{data.event.name}</h3>
