@@ -3,6 +3,7 @@ import {
   getEventDetails,
   getEvents,
   getEventsDetails,
+  getEventsWithDetails,
   getUpcomingLiveEvents,
 } from "@/api/event";
 import { useQuery } from "react-query";
@@ -28,6 +29,7 @@ import {
   AnimalHealthLogWithDetails,
   AnimalWithCurrentEvent,
   AnimalWithEvents,
+  Event,
   EventWithDetails,
   EventWithDetailsAndComments,
   Group,
@@ -62,17 +64,24 @@ export function useHandlers() {
   });
 }
 
-export function useEvents() {
+export function useEventsWithDetails() {
   return useQuery<EventWithCount[]>({
+    queryKey: ["events-details"],
+    queryFn: getEventsWithDetails,
+  });
+}
+
+export function useEvents() {
+  return useQuery<Event[]>({
     queryKey: ["events"],
     queryFn: getEvents,
   });
 }
 
-export function useEventsDetails(date: Date) {
-  return useQuery<EventWithDetailsAndComments[]>({
-    queryKey: ["events_details", date.toISOString()],
-    queryFn: () => getEventsDetails(date),
+export function useEventsDetails(id: string) {
+  return useQuery<EventWithDetailsAndComments>({
+    queryKey: ["events_details", id],
+    queryFn: () => getEventsDetails(id),
   });
 }
 

@@ -10,7 +10,7 @@ import {
   useUpcomingLiveEvents,
   useUser,
 } from "@/api/queries";
-import { EventsCalendar } from "@/components/dashboard/events-calendar";
+import Calendar from "@/components/big-calendar";
 import { ListItem } from "@/components/dashboard/list-item";
 import { LiveFeed } from "@/components/dashboard/live-feed";
 import { EventHoverCard } from "@/components/events/event-hover-card";
@@ -20,6 +20,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { hasPermission, timeTill } from "@/utils";
+import { EventsCalendar } from "@/components/dashboard/events-calendar";
 
 export function DashboardPage() {
   return (
@@ -42,8 +43,11 @@ export function DashboardPage() {
         <CheckedOutAnimals />
         <RestingAnimals />
       </div>
-      <div className="mt-10 grid h-[480px] grid-cols-1 gap-4 xl:grid-cols-5 2xl:gap-8">
+      <div className="mt-10 grid h-[480px] grid-cols-1 gap-4 2xl:grid-cols-5 2xl:gap-8">
         <EventsCalendar />
+        {/* <div className="col-span-3 grid gap-1 rounded-lg bg-white px-2 py-2 shadow-sm md:grid-cols-2">
+          <Calendar />
+        </div> */}
         <LiveFeed />
       </div>
     </>

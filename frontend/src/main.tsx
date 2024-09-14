@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
+import Calendar from "./components/big-calendar";
 import "./index.css";
 import { ChangePasswordPage } from "./routes/auth/change-password/page";
 import { AuthLayout } from "./routes/auth/layout";
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
           { path: "/settings", element: <SettingsPage /> },
           { path: "/animals/:id", element: <AnimalDetailsPage /> },
           { path: "/users/:id", element: <UserDetailsPage /> },
+          { path: "/calendar", element: <Calendar /> },
         ],
       },
     ],

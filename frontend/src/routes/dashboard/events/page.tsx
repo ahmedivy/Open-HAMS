@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
-import { useEvents, useUser } from "@/api/queries";
+import { useEventsWithDetails, useUser } from "@/api/queries";
 import { NewEventModel } from "@/components/events/new-event-model";
 import { LoadingDots } from "@/components/icons";
 import { Sidebar } from "@/components/sidebar";
@@ -13,7 +13,7 @@ import { Loading } from "@/routes/loading";
 import { hasPermission } from "@/utils";
 
 export function EventsPage() {
-  const { data: events, isLoading } = useEvents();
+  const { data: events, isLoading } = useEventsWithDetails();
   const user = useUser();
 
   if (isLoading) return <Loading />;
